@@ -90,10 +90,17 @@
     <!-- SECCIÓN 1 - VIDEO HERO PRINCIPAL -->
     <header id="inicio" class="hero-section position-relative d-flex align-items-center justify-content-center">
       <div class="hero-video-container">
+        <video
+          ref="heroVideoRef"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="auto"
+          class="hero-bg-video"
+          :src="heroVideoUrl"
+        />
         <div class="hero-video-overlay"></div>
-        <video autoplay muted loop playsinline class="hero-bg-video">
-          <source src="https://assets.mixkit.co/videos/preview/mixkit-pouring-whiskey-into-a-glass-with-ice-43098-large.mp4" type="video/mp4" />
-        </video>
       </div>
 
       <div class="container hero-content text-center z-3">
@@ -393,10 +400,10 @@
               "Donde la confianza se celebra." El refugio definitivo para los amantes de las buenas bebidas. Contamos con una amplia bodega de licores importados y nacionales de calidad certificada.
             </p>
             <div class="social-links-gold d-flex gap-3">
-              <a href="#" class="social-circle-gold"><i class="bi bi-facebook"></i></a>
-              <a href="#" class="social-circle-gold"><i class="bi bi-instagram"></i></a>
-              <a href="#" class="social-circle-gold"><i class="bi bi-twitter-x"></i></a>
-              <a href="#" class="social-circle-gold"><i class="bi bi-whatsapp"></i></a>
+              <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" class="social-circle-gold"><i class="bi bi-facebook"></i></a>
+              <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" class="social-circle-gold"><i class="bi bi-instagram"></i></a>
+              <a href="https://www.x.com/" target="_blank" rel="noopener noreferrer" class="social-circle-gold"><i class="bi bi-twitter-x"></i></a>
+              <a href="https://wa.me/59175781303" target="_blank" rel="noopener noreferrer" class="social-circle-gold"><i class="bi bi-whatsapp"></i></a>
             </div>
           </div>
           
@@ -419,11 +426,11 @@
             <ul class="list-unstyled text-secondary d-flex flex-column gap-3">
               <li class="d-flex align-items-start gap-2">
                 <i class="bi bi-geo-alt-fill text-gold mt-1"></i>
-                <span>Av. Montes #890, Zona Central, La Paz - Bolivia</span>
+                <span>Calle El Paraiso 123, Tarija - Bolivia</span>
               </li>
               <li class="d-flex align-items-center gap-2">
-                <i class="bi bi-telephone-fill text-gold"></i>
-                <span>+591 2 2112233 / +591 71234567</span>
+                <i class="bi bi-whatsapp text-gold"></i>
+                <a href="https://wa.me/59175781303" target="_blank" rel="noopener noreferrer" class="text-secondary text-decoration-none">+591 75781303</a>
               </li>
               <li class="d-flex align-items-center gap-2">
                 <i class="bi bi-envelope-fill text-gold"></i>
@@ -642,6 +649,8 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const authStore = useAuthStore()
 
+const heroVideoUrl = ref('/video/hero.mp4')
+const heroVideoRef = ref<HTMLVideoElement | null>(null)
 const loading = ref(true)
 const products = ref<any[]>([])
 const categorias = ref<any[]>([])
@@ -723,6 +732,20 @@ onMounted(async () => {
   if (cartModalRef.value) cartModal = new Modal(cartModalRef.value)
   if (historyModalRef.value) historyModal = new Modal(historyModalRef.value)
   
+  try {
+    const res = await fetch('/video/config.json')
+    if (res.ok) {
+      const data = await res.json()
+      if (data.videoUrl) {
+        heroVideoUrl.value = data.videoUrl
+      }
+    }
+  } catch (e) {
+    console.error('Error al cargar config de video', e)
+  }
+
+  heroVideoRef.value?.play().catch(() => {})
+
   await loadCatalog()
   
   try {
@@ -1078,10 +1101,16 @@ function subscribeNewsletter() {
 }
 
 .hero-bg-video {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  z-index: 1;
   opacity: 0.35;
+  filter: blur(8px);
+  transform: scale(1.05); /* Evita que los bordes borrosos revelen el fondo */
 }
 
 .hero-video-overlay {

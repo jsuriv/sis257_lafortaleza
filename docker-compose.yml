@@ -1,6 +1,9 @@
 services:
 
   backend:
+    build:
+      context: ./backend_lafortaleza
+      dockerfile: Dockerfile
     image: backend-lafortaleza
     container_name: backend_lafortaleza
     ports:
@@ -14,6 +17,9 @@ services:
       JWT_SECRET: lafortaleza_secret_key_sis257_2024
 
   frontend:
+    build:
+      context: ./frontend_lafortaleza
+      dockerfile: Dockerfile
     image: frontend-lafortaleza
     container_name: frontend_lafortaleza
     ports:

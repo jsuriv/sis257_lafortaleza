@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { ProductosService } from './productos.service';
 import { CreateProductoDto } from './dto/create-producto.dto';
@@ -6,13 +6,119 @@ import { UpdateProductoDto } from './dto/update-producto.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readdirSync, unlinkSync } from 'fs';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('productos')
 @ApiBearerAuth()
 @Controller('productos')
 export class ProductosController {
   constructor(private readonly productosService: ProductosService) {}
+
+  @Post('upload-hero')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Subir o reemplazar el video de fondo de la página de inicio (Solo Admin)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: (req, file, callback) => {
+        const targetDir = join(process.cwd(), '..', 'frontend_lafortaleza', 'public', 'video');
+        if (!existsSync(targetDir)) {
+          mkdirSync(targetDir, { recursive: true });
+        }
+        callback(null, targetDir);
+      },
+      filename: (req, file, callback) => {
+        const ext = extname(file.originalname);
+        const uniqueSuffix = Date.now();
+        callback(null, `hero-${uniqueSuffix}${ext}`);
+      }
+    }),
+    fileFilter: (req, file, callback) => {
+      if (!file.mimetype.match(/\/(mp4|webm|ogg|mov|avi)$/i)) {
+        return callback(new Error('Solo se permiten archivos de video.'), false);
+      }
+      callback(null, true);
+    }
+  }))
+  uploadHeroFile(@UploadedFile() file: any) {
+    if (!file) {
+      return { url: '' };
+    }
+    const targetDir = join(process.cwd(), '..', 'frontend_lafortaleza', 'public', 'video');
+    
+    // Clean old hero videos to avoid cluttering the public/video folder
+    try {
+      const files = readdirSync(targetDir);
+      files.forEach((f) => {
+        if (f.startsWith('hero-') && f !== file.filename) {
+          unlinkSync(join(targetDir, f));
+        }
+      });
+    } catch (e) {
+      console.error('Error al limpiar videos anteriores:', e);
+    }
+
+    // Save the new video configuration
+    const videoUrl = `/video/${file.filename}`;
+    try {
+      writeFileSync(
+        join(targetDir, 'config.json'),
+        JSON.stringify({ videoUrl }, null, 2)
+      );
+    } catch (e) {
+      console.error('Error al guardar config.json:', e);
+    }
+
+    return { url: videoUrl };
+  }
+
+  @Post('restore-hero')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Restablecer el video de fondo predeterminado (Solo Admin)' })
+  restoreHero() {
+    const targetDir = join(process.cwd(), '..', 'frontend_lafortaleza', 'public', 'video');
+    
+    // Clean custom hero videos to avoid cluttering
+    try {
+      const files = readdirSync(targetDir);
+      files.forEach((f) => {
+        if (f.startsWith('hero-')) {
+          unlinkSync(join(targetDir, f));
+        }
+      });
+    } catch (e) {
+      console.error('Error al limpiar videos anteriores:', e);
+    }
+
+    // Save default videoUrl config
+    const videoUrl = '/video/hero.mp4';
+    try {
+      writeFileSync(
+        join(targetDir, 'config.json'),
+        JSON.stringify({ videoUrl }, null, 2)
+      );
+    } catch (e) {
+      console.error('Error al guardar config.json:', e);
+    }
+
+    return { url: videoUrl };
+  }
 
   @Post('upload')
   @ApiOperation({ summary: 'Subir una imagen o video para un producto' })
