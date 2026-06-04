@@ -1,0 +1,109 @@
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ProductosService } from './productos.service';
+import { CreateProductoDto } from './dto/create-producto.dto';
+import { UpdateProductoDto } from './dto/update-producto.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+
+@ApiTags('productos')
+@ApiBearerAuth()
+@Controller('productos')
+export class ProductosController {
+  constructor(private readonly productosService: ProductosService) {}
+
+  @Post('upload')
+  @ApiOperation({ summary: 'Subir una imagen o video para un producto' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: (req, file, callback) => {
+        const isVideo = file.mimetype.startsWith('video/');
+        const targetDir = isVideo 
+          ? join(process.cwd(), '..', 'frontend_lafortaleza', 'public', 'videos')
+          : join(process.cwd(), '..', 'frontend_lafortaleza', 'public', 'uploads');
+          
+        if (!existsSync(targetDir)) {
+          mkdirSync(targetDir, { recursive: true });
+        }
+        callback(null, targetDir);
+      },
+      filename: (req, file, callback) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = extname(file.originalname);
+        callback(null, `prod-${uniqueSuffix}${ext}`);
+      }
+    }),
+    fileFilter: (req, file, callback) => {
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|mp4|webm|ogg|mov|avi)$/i)) {
+        return callback(new Error('Solo se permiten archivos de imagen o video.'), false);
+      }
+      callback(null, true);
+    }
+  }))
+  uploadFile(@UploadedFile() file: any) {
+    if (!file) {
+      return { url: '' };
+    }
+    const isVideo = file.mimetype.startsWith('video/');
+    const folder = isVideo ? 'videos' : 'uploads';
+    return {
+      url: `http://localhost:5173/${folder}/${file.filename}`
+    };
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Crear un producto' })
+  create(@Body() createProductoDto: CreateProductoDto) {
+    return this.productosService.create(createProductoDto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los productos' })
+  findAll() {
+    return this.productosService.findAll();
+  }
+
+  @Get('buscar')
+  @ApiOperation({ summary: 'Buscar productos por nombre o código' })
+  buscar(@Query('q') termino: string) {
+    return this.productosService.buscar(termino || '');
+  }
+
+  @Get('bajo-stock')
+  @ApiOperation({ summary: 'Obtener productos con stock bajo' })
+  getBajoStock() {
+    return this.productosService.getBajoStock();
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtener un producto por ID' })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productosService.findOne(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar un producto' })
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateProductoDto: UpdateProductoDto) {
+    return this.productosService.update(id, updateProductoDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Eliminar un producto' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.productosService.remove(id);
+  }
+}

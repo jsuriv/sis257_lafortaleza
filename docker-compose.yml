@@ -1,0 +1,22 @@
+services:
+
+  backend:
+    image: backend-lafortaleza
+    container_name: backend_lafortaleza
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: 123456
+      DB_NAME: sis257_lafortaleza
+      JWT_SECRET: lafortaleza_secret_key_sis257_2024
+
+  frontend:
+    image: frontend-lafortaleza
+    container_name: frontend_lafortaleza
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
