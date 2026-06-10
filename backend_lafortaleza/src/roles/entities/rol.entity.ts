@@ -3,6 +3,8 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
 import { Usuario } from '../../usuarios/entities/usuario.entity';
@@ -18,8 +20,14 @@ export class Rol {
   @Column({ type: 'text', nullable: true })
   descripcion: string;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
+  fechaCreacion: Date;
+
+  @UpdateDateColumn({ name: 'fecha_modificacion', type: 'timestamp' })
+  fechaModificacion: Date;
+
+  @DeleteDateColumn({ name: 'fecha_eliminacion', type: 'timestamp', nullable: true })
+  fechaEliminacion: Date;
 
   // Relaciones
   @OneToMany(() => Usuario, (usuario) => usuario.rol)

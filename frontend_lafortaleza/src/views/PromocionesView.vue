@@ -50,11 +50,9 @@
                 {{ item.productos?.length || 0 }} productos
               </span>
             </td>
-            <td>
-              <span :class="getPromoStatusClass(item)">
-                {{ getPromoStatusLabel(item) }}
+              <span :class="getPromoStatusClass(item)" style="border-radius:6px; font-size:0.72rem; padding:4px 10px; font-weight:700;">
+                <i :class="getPromoStatusIcon(item) + ' me-1'"></i>{{ getPromoStatusLabel(item) }}
               </span>
-            </td>
             <td>
               <button class="btn btn-sm btn-outline-info me-1" @click="openModal(item)">
                 <i class="bi bi-pencil"></i>
@@ -73,7 +71,7 @@
 
     <!-- Create/Edit Modal -->
     <teleport to="body">
-      <div class="modal fade theme-admin" id="modalPromocion" tabindex="-1" ref="modalRef">
+      <div class="modal fade" id="modalPromocion" tabindex="-1" ref="modalRef">
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="modal-header">
@@ -248,7 +246,6 @@ function formatDate(dateStr: string) {
   })
 }
 
-// Check status based on active switches and date ranges
 function getPromoStatusLabel(promo: any) {
   if (!promo.estado) return 'Inactivo'
   const now = new Date()
@@ -256,12 +253,20 @@ function getPromoStatusLabel(promo: any) {
   const end = new Date(promo.fechaFin)
   if (now < start) return 'Programado'
   if (now > end) return 'Expirado'
-  return 'Vigente'
+  return 'ACTIVA'
+}
+
+function getPromoStatusIcon(promo: any) {
+  const s = getPromoStatusLabel(promo)
+  if (s === 'ACTIVA') return 'bi bi-lightning-fill'
+  if (s === 'Programado') return 'bi bi-clock'
+  if (s === 'Expirado') return 'bi bi-calendar-x'
+  return 'bi bi-dash-circle'
 }
 
 function getPromoStatusClass(promo: any) {
   const status = getPromoStatusLabel(promo)
-  if (status === 'Vigente') return 'badge bg-success-trans text-success fw-bold'
+  if (status === 'ACTIVA') return 'badge-promo-activa'
   if (status === 'Programado') return 'badge bg-info-trans text-blue fw-bold'
   if (status === 'Expirado') return 'badge bg-danger-trans text-danger fw-bold'
   return 'badge bg-secondary-trans text-secondary'

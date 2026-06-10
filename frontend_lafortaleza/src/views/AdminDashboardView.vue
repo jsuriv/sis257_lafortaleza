@@ -238,7 +238,7 @@
                     <small class="text-secondary" style="font-size: 0.72rem;">NIT: {{ c.ciNit || 'Sin NIT' }}</small>
                   </div>
                 </div>
-                <span class="text-secondary" style="font-size: 0.75rem;">{{ formatTime(c.createdAt) }}</span>
+                <span class="text-secondary" style="font-size: 0.75rem;">{{ formatTime(c.fechaCreacion) }}</span>
               </div>
               <div v-if="recentClients.length === 0" class="text-center text-secondary py-5">
                 No hay clientes registrados.
@@ -375,7 +375,7 @@ const topSellingProducts = computed(() => {
 // Recent Clients
 const recentClients = computed(() => {
   return [...clients.value]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime())
     .slice(0, 5)
 })
 

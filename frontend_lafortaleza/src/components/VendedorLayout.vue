@@ -1,13 +1,17 @@
 <template>
-  <div class="d-flex theme-vendedor min-vh-100 bg-theme-blue-light">
+  <div class="d-flex min-vh-100" style="background: var(--bg-dark);">
     <!-- Sidebar -->
-    <aside class="sidebar bg-blue-dark" :class="{ show: sidebarOpen }">
-      <div class="sidebar-brand border-blue-bottom">
-        <h4 class="text-white fw-bold"><i class="bi bi-cart-fill text-blue-light"></i> LA FORTALEZA</h4>
-        <small class="text-blue-light-soft tracking-widest">Punto de Venta (POS)</small>
+    <aside class="sidebar" :class="{ show: sidebarOpen }">
+      <div class="sidebar-brand">
+        <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+          <i class="bi bi-cart-fill text-gold" style="font-size: 1.4rem;"></i>
+          <h4 class="mb-0" style="font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; color:var(--primary); letter-spacing:1.5px;">LA FORTALEZA</h4>
+        </div>
+        <small class="tracking-widest" style="color:var(--text-secondary);">Punto de Venta</small>
       </div>
+
       <nav class="sidebar-nav">
-        <div class="nav-section-title text-blue-light-soft">Operaciones</div>
+        <div class="nav-section-title">Operaciones</div>
         <router-link to="/vendedor/dashboard" class="nav-link" @click="sidebarOpen = false">
           <i class="bi bi-grid-1x2-fill"></i> Dashboard
         </router-link>
@@ -15,37 +19,39 @@
           <i class="bi bi-cart-plus-fill"></i> Nueva Venta
         </router-link>
         <router-link to="/vendedor/ventas" class="nav-link" @click="sidebarOpen = false">
-          <i class="bi bi-receipt"></i> Ventas
+          <i class="bi bi-receipt"></i> Mis Ventas
+        </router-link>
+
+        <div class="nav-section-title">Catálogo</div>
+        <router-link to="/vendedor/productos" class="nav-link" @click="sidebarOpen = false">
+          <i class="bi bi-box-seam-fill"></i> Productos
         </router-link>
         <router-link to="/vendedor/clientes" class="nav-link" @click="sidebarOpen = false">
           <i class="bi bi-people-fill"></i> Clientes
         </router-link>
-        <router-link to="/vendedor/productos" class="nav-link" @click="sidebarOpen = false">
-          <i class="bi bi-box-seam-fill"></i> Productos
-        </router-link>
 
-        <div class="nav-section-title text-blue-light-soft">Usuario</div>
+        <div class="nav-section-title">Usuario</div>
         <router-link to="/vendedor/perfil" class="nav-link" @click="sidebarOpen = false">
           <i class="bi bi-person-circle"></i> Mi Perfil
         </router-link>
       </nav>
     </aside>
 
-    <!-- Main content -->
-    <div class="main-content flex-grow-1 bg-theme">
-      <header class="top-header bg-white border-bottom-soft">
-        <button class="btn btn-sm btn-outline-secondary d-md-none" @click="sidebarOpen = !sidebarOpen">
+    <!-- Main Content -->
+    <div class="main-content flex-grow-1">
+      <header class="top-header">
+        <button class="btn btn-sm d-md-none" style="border: 1px solid var(--border-color); color: var(--text-secondary);" @click="sidebarOpen = !sidebarOpen">
           <i class="bi bi-list"></i>
         </button>
+        <span class="d-none d-md-block" style="font-size:0.75rem; color:var(--text-secondary);">
+          Bienvenido, <strong class="text-gold">{{ authStore.fullName }}</strong>
+        </span>
         <div class="d-flex align-items-center gap-2 ms-auto">
-          <span class="text-secondary" style="font-size: 0.85rem;">
-            <i class="bi bi-person-badge text-blue"></i> {{ authStore.fullName }}
+          <span class="badge bg-gold-trans text-gold text-uppercase" style="letter-spacing:1px; font-size:0.65rem;">
+            <i class="bi bi-person-badge-fill me-1"></i>{{ authStore.user?.rol?.nombre }}
           </span>
-          <span class="badge text-uppercase bg-blue-trans text-blue">
-            {{ authStore.user?.rol?.nombre }}
-          </span>
-          <button class="btn btn-sm btn-outline-danger ms-2" @click="handleLogout">
-            <i class="bi bi-box-arrow-right"></i> Salir
+          <button class="btn btn-sm" style="border:1px solid rgba(239,68,68,0.3); color:#ef4444; border-radius:8px;" @click="handleLogout">
+            <i class="bi bi-box-arrow-right me-1"></i> Salir
           </button>
         </div>
       </header>
@@ -54,8 +60,13 @@
       </div>
     </div>
 
-    <!-- Backdrop for mobile -->
-    <div v-if="sidebarOpen" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-md-none" style="z-index: 1035;" @click="sidebarOpen = false"></div>
+    <!-- Mobile Backdrop -->
+    <div
+      v-if="sidebarOpen"
+      class="position-fixed top-0 start-0 w-100 h-100 d-md-none"
+      style="background:rgba(0,0,0,0.7); z-index:1035; backdrop-filter:blur(4px);"
+      @click="sidebarOpen = false"
+    ></div>
   </div>
 </template>
 
@@ -72,151 +83,19 @@ function handleLogout() {
 </script>
 
 <style scoped>
-.theme-vendedor {
-  --primary: #2563EB;
-  --secondary: #1E40AF;
-  --bg-dark: #EFF6FF;
-  --bg-card: #FFFFFF;
-  --bg-sidebar: #1E40AF;
-  --text-primary: #1E293B;
-  --text-secondary: #64748B;
-  --border-color: rgba(37, 99, 235, 0.15);
-  --success: #22C55E;
-  --danger: #EF4444;
-  --bg-glass: #FFFFFF;
-}
-
-.text-blue {
-  color: var(--primary) !important;
-}
-.text-blue-light {
-  color: #60a5fa !important;
-}
-.text-blue-light-soft {
-  color: #93c5fd !important;
-  opacity: 0.8;
-}
-
-.border-blue-bottom {
-  border-bottom: 2px solid rgba(96, 165, 250, 0.2);
-}
-
-.border-bottom-soft {
-  border-bottom: 1px solid rgba(37, 99, 235, 0.08);
-}
-
-.tracking-widest {
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-size: 0.65rem;
-}
-
-/* Sidebar Local Styling - Dark Blue style */
-.sidebar {
-  width: 260px;
-  min-height: 100vh;
-  background: var(--bg-sidebar);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1040;
-  transition: transform 0.3s ease;
-}
-
-.sidebar-brand {
-  padding: 1.5rem;
-  text-align: center;
-}
-
-.sidebar-nav {
-  padding: 1rem 0;
-}
-
-.sidebar-nav .nav-link {
-  color: #dbeafe; /* Very light blue for dark sidebar */
-  padding: 0.7rem 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-left: 3px solid transparent;
-  transition: all 0.2s ease;
-  text-decoration: none;
-}
-
-.sidebar-nav .nav-link:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-  border-left-color: #60a5fa;
-}
-
-.sidebar-nav .nav-link.router-link-active {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.15);
-  border-left-color: #ffffff;
+/* ── POS Action Highlight ── */
+.sidebar-nav .nav-link-pos {
+  background: rgba(212,175,55,0.10);
+  margin: 0.25rem 0.75rem;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--primary);
+  color: var(--primary-light);
   font-weight: 600;
 }
 
-/* POS specific visual focus */
-.sidebar-nav .nav-link-pos {
-  background: rgba(96, 165, 250, 0.15);
-  margin: 0.25rem 0.75rem;
-  border-radius: 8px;
-  padding: 0.7rem 1rem;
-}
 .sidebar-nav .nav-link-pos:hover {
-  background: rgba(96, 165, 250, 0.25);
-}
-
-.sidebar-nav .nav-link i {
-  font-size: 1.1rem;
-  width: 24px;
-  text-align: center;
-}
-
-.nav-section-title {
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  padding: 1.2rem 1.5rem 0.4rem;
-}
-
-.main-content {
-  margin-left: 260px;
-  min-height: 100vh;
-  background-color: var(--bg-dark);
-}
-
-.top-header {
-  height: 60px;
-  padding: 0.75rem 1.5rem;
-  display: flex;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 1030;
-}
-
-.content-area {
-  padding: 1.5rem;
-}
-
-.bg-blue-trans {
-  background: rgba(37, 99, 235, 0.12) !important;
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-  .sidebar.show {
-    transform: translateX(0);
-  }
-  .main-content {
-    margin-left: 0;
-  }
+  background: rgba(212,175,55,0.18);
+  box-shadow: 0 4px 12px rgba(212,175,55,0.15);
 }
 </style>

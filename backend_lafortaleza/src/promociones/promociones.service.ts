@@ -30,7 +30,7 @@ export class PromocionesService {
   async findAll(): Promise<Promocion[]> {
     return this.promocionRepo.find({
       relations: ['productos'],
-      order: { createdAt: 'DESC' },
+      order: { fechaCreacion: 'DESC' },
     });
   }
 
@@ -66,6 +66,6 @@ export class PromocionesService {
 
   async remove(id: number): Promise<void> {
     const promocion = await this.findOne(id);
-    await this.promocionRepo.remove(promocion);
+    await this.promocionRepo.softRemove(promocion);
   }
 }

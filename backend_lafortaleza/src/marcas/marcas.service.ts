@@ -37,6 +37,6 @@ export class MarcasService {
 
   async remove(id: number): Promise<void> {
     const marca = await this.findOne(id);
-    await this.marcaRepository.remove(marca);
+    await this.marcaRepository.softRemove(marca);
   }
 }

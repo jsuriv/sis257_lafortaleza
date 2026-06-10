@@ -3,6 +3,8 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   OneToMany,
   JoinColumn,
@@ -22,8 +24,14 @@ export class Compra {
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   total: number;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
+  fechaCreacion: Date;
+
+  @UpdateDateColumn({ name: 'fecha_modificacion', type: 'timestamp' })
+  fechaModificacion: Date;
+
+  @DeleteDateColumn({ name: 'fecha_eliminacion', type: 'timestamp', nullable: true })
+  fechaEliminacion: Date;
 
   // Relaciones
   @ManyToOne(() => Proveedor, (proveedor) => proveedor.compras)

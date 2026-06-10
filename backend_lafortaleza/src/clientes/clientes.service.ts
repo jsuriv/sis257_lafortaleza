@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { Cliente } from './entities/cliente.entity';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
@@ -42,9 +42,42 @@ export class ClientesService {
     return cliente;
   }
 
+  /**
+   * Búsqueda en tiempo real por nombre, apellido o CI/NIT
+   */
+  async buscar(termino: string): Promise<Cliente[]> {
+    return this.clienteRepository.find({
+      where: [
+        { nombre: ILike(`%${termino}%`) },
+        { apellido: ILike(`%${termino}%`) },
+        { ciNit: ILike(`%${termino}%`) },
+      ],
+      take: 10,
+      order: { nombre: 'ASC' },
+    });
+  }
+
+  /**
+   * Busca o crea el cliente "Consumidor Final" con NIT "0"
+   */
+  async getOrCreateConsumidorFinal(): Promise<Cliente> {
+    let consumidor = await this.clienteRepository.findOne({
+      where: { ciNit: '0', nombre: 'Consumidor', apellido: 'Final' },
+    });
+    if (!consumidor) {
+      consumidor = this.clienteRepository.create({
+        nombre: 'Consumidor',
+        apellido: 'Final',
+        ciNit: '0',
+        estado: true,
+      });
+      consumidor = await this.clienteRepository.save(consumidor);
+    }
+    return consumidor;
+  }
+
   async update(id: number, updateClienteDto: UpdateClienteDto, usuarioAutenticado: Usuario | null = null): Promise<Cliente> {
     const cliente = await this.findOne(id);
-    const anterior = { ...cliente };
     Object.assign(cliente, updateClienteDto);
     const savedCliente = await this.clienteRepository.save(cliente);
 
@@ -61,7 +94,7 @@ export class ClientesService {
 
   async remove(id: number, usuarioAutenticado: Usuario | null = null): Promise<void> {
     const cliente = await this.findOne(id);
-    await this.clienteRepository.remove(cliente);
+    await this.clienteRepository.softRemove(cliente);
 
     await this.auditoriaService.registrar(
       usuarioAutenticado,

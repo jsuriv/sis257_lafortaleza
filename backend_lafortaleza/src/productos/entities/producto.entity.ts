@@ -3,6 +3,8 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   OneToMany,
   JoinColumn,
@@ -46,8 +48,14 @@ export class Producto {
   @Column({ default: true })
   estado: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
+  fechaCreacion: Date;
+
+  @UpdateDateColumn({ name: 'fecha_modificacion', type: 'timestamp' })
+  fechaModificacion: Date;
+
+  @DeleteDateColumn({ name: 'fecha_eliminacion', type: 'timestamp', nullable: true })
+  fechaEliminacion: Date;
 
   // Relaciones
   @ManyToOne(() => Categoria, (categoria) => categoria.productos)
@@ -81,6 +89,6 @@ export class Producto {
   @JoinColumn({ name: 'promocion_id' })
   promocion: Promocion;
 
-  @Column({ name: 'promocion_id', nullable: true })
+  @Column({ name: 'promocion_id', type: 'integer', nullable: true })
   promocionId: number | null;
 }

@@ -43,7 +43,7 @@ export class ProductosService {
 
   async remove(id: number): Promise<void> {
     const producto = await this.findOne(id);
-    await this.productoRepository.remove(producto);
+    await this.productoRepository.softRemove(producto);
   }
 
   async buscar(termino: string): Promise<Producto[]> {
