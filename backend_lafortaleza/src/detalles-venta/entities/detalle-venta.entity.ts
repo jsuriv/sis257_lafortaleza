@@ -22,6 +22,9 @@ export class DetalleVenta {
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   subtotal: number;
 
+  @Column({ name: 'tipo_venta', length: 20, default: 'Unidad' })
+  tipoVenta: string;
+
   // Relaciones
   @ManyToOne(() => Venta, (venta) => venta.detalles)
   @JoinColumn({ name: 'venta_id' })

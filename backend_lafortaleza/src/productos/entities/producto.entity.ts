@@ -48,6 +48,15 @@ export class Producto {
   @Column({ default: true })
   estado: boolean;
 
+  @Column({ name: 'unidad_medida', length: 50, default: 'Unidad' })
+  unidadMedida: string;
+
+  @Column({ name: 'unidades_por_caja', type: 'int', nullable: true })
+  unidadesPorCaja: number;
+
+  @Column({ name: 'precio_caja', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  precioCaja: number;
+
   @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
   fechaCreacion: Date;
 

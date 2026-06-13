@@ -37,6 +37,9 @@ export class Venta {
   @Column({ name: 'comprobante_qr', type: 'varchar', length: 500, nullable: true })
   comprobanteQr: string | null;
 
+  @Column({ name: 'direccion_entrega', type: 'varchar', length: 500, nullable: true })
+  direccionEntrega: string | null;
+
   @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
   fechaCreacion: Date;
 

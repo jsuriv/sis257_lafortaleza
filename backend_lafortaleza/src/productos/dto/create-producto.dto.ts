@@ -43,6 +43,21 @@ export class CreateProductoDto {
   @IsOptional()
   estado?: boolean;
 
+  @ApiProperty({ example: 'Botella', required: false })
+  @IsString()
+  @IsOptional()
+  unidadMedida?: string;
+
+  @ApiProperty({ example: 12, required: false })
+  @IsNumber()
+  @IsOptional()
+  unidadesPorCaja?: number;
+
+  @ApiProperty({ example: 100.00, required: false })
+  @IsNumber()
+  @IsOptional()
+  precioCaja?: number;
+
   @ApiProperty({ example: 1 })
   @IsNumber()
   @IsOptional()

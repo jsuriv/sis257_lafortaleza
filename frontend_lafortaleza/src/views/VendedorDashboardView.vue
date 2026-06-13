@@ -164,6 +164,7 @@
                 <th>Nombre</th>
                 <th>Categoría</th>
                 <th>Precio Venta</th>
+                <th>Precio Caja</th>
                 <th>Stock Disponible</th>
                 <th>Estado</th>
               </tr>
@@ -180,6 +181,10 @@
                 <td class="fw-semibold text-dark">{{ p.nombre }}</td>
                 <td class="text-secondary">{{ p.categoria?.nombre || 'General' }}</td>
                 <td class="fw-bold text-blue">Bs. {{ Number(p.precioVenta).toFixed(2) }}</td>
+                <td class="text-secondary">
+                  <span v-if="p.precioCaja">Bs. {{ Number(p.precioCaja).toFixed(2) }} <small>({{ p.unidadesPorCaja }}u)</small></span>
+                  <span v-else>-</span>
+                </td>
                 <td>
                   <span :class="Number(p.stock) <= Number(p.stockMinimo) ? 'badge badge-stock-low' : 'badge badge-stock-ok'">
                     {{ p.stock }} u.
@@ -192,7 +197,7 @@
                 </td>
               </tr>
               <tr v-if="searchedProducts.length === 0">
-                <td colspan="7" class="text-center text-secondary py-3">No se encontraron productos coincidentes</td>
+                <td colspan="8" class="text-center text-secondary py-3">No se encontraron productos coincidentes</td>
               </tr>
             </tbody>
           </table>

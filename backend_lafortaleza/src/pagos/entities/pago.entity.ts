@@ -17,6 +17,12 @@ export class Pago {
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   monto: number;
 
+  @Column({ name: 'monto_recibido', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  montoRecibido: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  cambio: number;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   fecha: Date;
 

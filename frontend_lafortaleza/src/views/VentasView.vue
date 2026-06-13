@@ -149,7 +149,10 @@
               </thead>
               <tbody>
                 <tr v-for="d in selectedVenta.detalles" :key="d.id">
-                  <td>{{ d.producto?.nombre }}</td>
+                  <td>
+                    {{ d.producto?.nombre }}
+                    <span class="text-secondary" style="font-size:0.75rem;">({{ d.tipoVenta || 'Unidad' }})</span>
+                  </td>
                   <td>{{ d.cantidad }}</td>
                   <td>Bs. {{ Number(d.precio).toFixed(2) }}</td>
                   <td class="text-gold fw-bold">Bs. {{ Number(d.subtotal).toFixed(2) }}</td>

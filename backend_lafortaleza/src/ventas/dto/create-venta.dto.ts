@@ -14,6 +14,11 @@ export class CreateDetalleVentaDto {
   @ApiProperty({ example: 12.00 })
   @IsNumber()
   precio: number;
+
+  @ApiPropertyOptional({ example: 'Unidad' })
+  @IsString()
+  @IsOptional()
+  tipoVenta?: string;
 }
 
 export class CreatePagoVentaDto {
@@ -24,6 +29,16 @@ export class CreatePagoVentaDto {
   @ApiProperty({ example: 36.00 })
   @IsNumber()
   monto: number;
+
+  @ApiPropertyOptional({ example: 50.00 })
+  @IsNumber()
+  @IsOptional()
+  montoRecibido?: number;
+
+  @ApiPropertyOptional({ example: 14.00 })
+  @IsNumber()
+  @IsOptional()
+  cambio?: number;
 }
 
 export class CreateVentaDto {
@@ -41,6 +56,11 @@ export class CreateVentaDto {
   @IsOptional()
   comprobanteQr?: string;
 
+  @ApiPropertyOptional({ example: 'Av. Las Americas #123', description: 'Dirección de entrega' })
+  @IsString()
+  @IsOptional()
+  direccionEntrega?: string;
+
   @ApiProperty({ type: [CreateDetalleVentaDto] })
   @IsArray()
   @ValidateNested({ each: true })
@@ -52,4 +72,9 @@ export class CreateVentaDto {
   @ValidateNested({ each: true })
   @Type(() => CreatePagoVentaDto)
   pagos: CreatePagoVentaDto[];
+
+  @ApiPropertyOptional({ example: 'Pendiente', description: 'Estado inicial de la venta' })
+  @IsString()
+  @IsOptional()
+  estado?: string;
 }

@@ -149,11 +149,17 @@
               <div class="card-body-premium">
                 <small class="text-gold fw-bold text-uppercase d-block mb-1">{{ p.marca?.nombre }}</small>
                 <h5 class="premium-title text-truncate text-white">{{ p.nombre }}</h5>
-                <p class="premium-price mb-3">Bs. {{ Number(p.precioVenta).toFixed(2) }}</p>
+                <p class="premium-price mb-2">Bs. {{ Number(p.precioVenta).toFixed(2) }}</p>
+                <div v-if="p.precioCaja && p.unidadesPorCaja" class="mb-3" style="line-height: 1.1;">
+                  <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle" style="font-size: 0.7rem;">
+                    Caja ({{p.unidadesPorCaja}} un): <span class="text-white">Bs. {{ Number(p.precioCaja).toFixed(2) }}</span>
+                  </span>
+                </div>
+                <div v-else class="mb-3" style="line-height: 1.1; opacity: 0;">&nbsp;</div>
                 <div class="d-flex justify-content-between align-items-center pt-2 border-top border-dark">
                   <span class="badge bg-dark text-secondary p-2">Stock: {{ p.stock }}</span>
-                  <button v-if="p.stock > 0" class="btn btn-gold-sm" @click.stop="addToCart(p)">
-                    <i class="bi bi-cart-plus"></i> Agregar
+                  <button v-if="p.stock > 0" class="btn btn-gold-sm" @click.stop="openDetails(p)">
+                    <i class="bi bi-cart-plus"></i> Comprar
                   </button>
                   <span v-else class="text-danger fw-bold small">Agotado</span>
                 </div>
@@ -321,7 +327,7 @@
               <div class="card-body-premium">
                 <small class="text-gold fw-bold text-uppercase d-block mb-1">{{ p.marca?.nombre }}</small>
                 <h5 class="premium-title text-truncate text-white">{{ p.nombre }}</h5>
-                <p class="premium-price mb-3">
+                <p class="premium-price mb-2">
                   <template v-if="getActiveDiscount(p) > 0">
                     <span class="text-gold">Bs. {{ getDiscountedPrice(p).toFixed(2) }}</span>
                     <span class="text-secondary text-decoration-line-through ms-2" style="font-size: 0.82rem;">Bs. {{ Number(p.precioVenta).toFixed(2) }}</span>
@@ -330,10 +336,16 @@
                     Bs. {{ Number(p.precioVenta).toFixed(2) }}
                   </template>
                 </p>
+                <div v-if="p.precioCaja && p.unidadesPorCaja" class="mb-3" style="line-height: 1.1;">
+                  <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle" style="font-size: 0.7rem;">
+                    Caja ({{p.unidadesPorCaja}} un): <span class="text-white">Bs. {{ Number(p.precioCaja).toFixed(2) }}</span>
+                  </span>
+                </div>
+                <div v-else class="mb-3" style="line-height: 1.1; opacity: 0;">&nbsp;</div>
                 <div class="d-flex justify-content-between align-items-center pt-2 border-top border-dark">
                   <span class="badge bg-dark text-secondary p-2">Stock: {{ p.stock }}</span>
-                  <button v-if="p.stock > 0" class="btn btn-gold-sm" @click.stop="addToCart(p)">
-                    <i class="bi bi-cart-plus"></i> Agregar
+                  <button v-if="p.stock > 0" class="btn btn-gold-sm" @click.stop="openDetails(p)">
+                    <i class="bi bi-cart-plus"></i> Comprar
                   </button>
                   <span v-else class="text-danger fw-bold small">Agotado</span>
                 </div>
@@ -475,20 +487,49 @@
             
             <div class="row g-2 justify-content-center">
               <div class="col-5">
-                <div class="p-2 border rounded border-secondary" style="background: rgba(255,255,255,0.02);">
-                  <small class="text-secondary d-block">Precio</small>
-                  <strong class="text-white" style="font-size: 1.1rem;">
-                    <template v-if="getActiveDiscount(selectedProduct) > 0">
-                      <span class="text-gold">Bs. {{ getDiscountedPrice(selectedProduct).toFixed(2) }}</span>
-                      <small class="text-secondary text-decoration-line-through ms-2" style="font-size: 0.75rem;">Bs. {{ Number(selectedProduct.precioVenta).toFixed(2) }}</small>
-                    </template>
-                    <template v-else>
-                      Bs. {{ Number(selectedProduct.precioVenta).toFixed(2) }}
-                    </template>
-                  </strong>
+                <div class="p-2 border rounded border-secondary h-100 d-flex flex-column justify-content-between" style="background: rgba(255,255,255,0.02);">
+                  <div>
+                    <small class="text-secondary d-block">Unidad</small>
+                    <strong class="text-white" style="font-size: 1.1rem;">
+                      <template v-if="getActiveDiscount(selectedProduct) > 0">
+                        <span class="text-gold">Bs. {{ getDiscountedPrice(selectedProduct).toFixed(2) }}</span>
+                      </template>
+                      <template v-else>
+                        Bs. {{ Number(selectedProduct.precioVenta).toFixed(2) }}
+                      </template>
+                    </strong>
+                  </div>
+                  <div class="mt-2" v-if="selectedProduct.stock >= 1">
+                    <div class="input-group input-group-sm mx-auto" style="width: 100px;">
+                      <button class="btn btn-outline-secondary" type="button" @click="qtyUnidad > 0 ? qtyUnidad-- : null" style="padding: 0 12px;">-</button>
+                      <input type="text" class="form-control text-center bg-transparent text-white p-0 border-secondary fw-bold" v-model.number="qtyUnidad" readonly>
+                      <button class="btn btn-outline-secondary" type="button" @click="qtyUnidad < selectedProduct.stock ? qtyUnidad++ : null" style="padding: 0 12px;">+</button>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="col-5">
+              <div class="col-5" v-if="selectedProduct.precioCaja && selectedProduct.unidadesPorCaja">
+                <div class="p-2 border rounded border-secondary h-100 d-flex flex-column justify-content-between" style="background: rgba(255,255,255,0.02);">
+                  <div>
+                    <small class="text-secondary d-block">Caja ({{selectedProduct.unidadesPorCaja}} un)</small>
+                    <strong class="text-white" style="font-size: 1.1rem;">
+                      Bs. {{ Number(selectedProduct.precioCaja).toFixed(2) }}
+                    </strong>
+                    <small class="text-secondary d-block mt-1" style="font-size: 0.75rem;">
+                      (Bs. {{ (Number(selectedProduct.precioCaja) / selectedProduct.unidadesPorCaja).toFixed(2) }} c/u)
+                    </small>
+                  </div>
+                  <div class="mt-2" v-if="selectedProduct.stock >= selectedProduct.unidadesPorCaja">
+                    <div class="input-group input-group-sm mx-auto" style="width: 100px;">
+                      <button class="btn btn-outline-secondary" type="button" @click="qtyCaja > 0 ? qtyCaja-- : null" style="padding: 0 12px;">-</button>
+                      <input type="text" class="form-control text-center bg-transparent text-white p-0 border-secondary fw-bold" v-model.number="qtyCaja" readonly>
+                      <button class="btn btn-outline-secondary" type="button" @click="(qtyCaja + 1) * selectedProduct.unidadesPorCaja <= selectedProduct.stock ? qtyCaja++ : null" style="padding: 0 12px;">+</button>
+                    </div>
+                  </div>
+                  <span v-else class="text-danger d-block mt-2" style="font-size:0.8rem;">Stock insuf.</span>
+                </div>
+              </div>
+              <div class="col-5" v-else>
                 <div class="p-2 border rounded border-secondary" style="background: rgba(255,255,255,0.02);">
                   <small class="text-secondary d-block">Disponibilidad</small>
                   <strong :class="selectedProduct.stock > 0 ? 'text-success' : 'text-danger'" style="font-size: 1.1rem;">
@@ -498,8 +539,17 @@
               </div>
             </div>
           </div>
-          <div class="modal-footer justify-content-center">
-            <button type="button" class="btn btn-secondary w-50 py-2" data-bs-dismiss="modal">Cerrar</button>
+          <div class="modal-footer d-flex justify-content-between align-items-center">
+            <div class="text-start">
+              <small class="text-secondary d-block">Stock total:</small>
+              <strong class="text-white">{{ selectedProduct.stock }} u.</strong>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-secondary px-4 py-2" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-gold-custom px-4 py-2 d-flex align-items-center gap-2" @click="addToCartCombined">
+                <i class="bi bi-cart-plus-fill"></i> Llevar al Carrito
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -534,10 +584,15 @@
                   <tbody>
                     <tr v-for="(item, index) in cart" :key="index">
                       <td>
-                        <span class="fw-semibold text-white d-block">{{ item.nombre }}</span>
+                        <span class="fw-semibold text-white d-block">{{ item.nombre }} <span class="text-gold" style="font-size: 0.75rem;">({{ item.tipoVenta }})</span></span>
                         <small class="text-secondary">{{ item.codigo }}</small>
                       </td>
-                      <td>Bs. {{ Number(item.precio).toFixed(2) }}</td>
+                      <td>
+                        <div class="text-white">Bs. {{ Number(item.precio).toFixed(2) }}</div>
+                        <small class="text-secondary d-block" style="font-size: 0.7rem; line-height: 1;" v-if="item.tipoVenta === 'Caja'">
+                          (equivale a Bs. {{ (Number(item.precio) / item.factorUnidades).toFixed(2) }} c/u)
+                        </small>
+                      </td>
                       <td>
                         <div class="d-flex align-items-center justify-content-center gap-2">
                           <button class="btn btn-sm btn-outline-secondary" @click="decreaseQty(index)">-</button>
@@ -608,6 +663,7 @@
                       <th>Fecha</th>
                       <th>Método de Pago</th>
                       <th class="text-end">Total</th>
+                      <th class="text-center">Estado</th>
                       <th>Detalle del Pedido</th>
                     </tr>
                   </thead>
@@ -619,10 +675,13 @@
                         <span class="badge bg-secondary">{{ ped.pagos?.[0]?.metodoPago?.nombre || 'Efectivo' }}</span>
                       </td>
                       <td class="text-end fw-bold text-gold">Bs. {{ Number(ped.total).toFixed(2) }}</td>
+                      <td class="text-center">
+                        <span class="badge" :class="badgeEstado(ped.estado)">{{ ped.estado }}</span>
+                      </td>
                       <td>
                         <ul class="list-unstyled mb-0" style="font-size: 0.8rem; color: var(--text-muted);">
                           <li v-for="det in ped.detalles" :key="det.id">
-                            • {{ det.producto?.nombre }} (x{{ det.cantidad }})
+                            • {{ det.producto?.nombre }} (x{{ det.cantidad }} {{ det.tipoVenta || 'Unidad' }})
                           </li>
                         </ul>
                       </td>
@@ -666,8 +725,11 @@ const selectedMarcaId = ref<number | null>(null)
 const sortBy = ref('nombre')
 const newsletterEmail = ref('')
 
+const qtyUnidad = ref(0)
+const qtyCaja = ref(0)
+
 // Cart and History state
-const cart = ref<{ productoId: number; nombre: string; codigo: string; cantidad: number; precio: number; stock: number }[]>([])
+const cart = ref<{ productoId: number; nombre: string; codigo: string; cantidad: number; precio: number; stock: number; tipoVenta: string; factorUnidades: number }[]>([])
 const metodosPago = ref<any[]>([])
 const cartMetodoPagoId = ref(1)
 const processingCart = ref(false)
@@ -868,6 +930,8 @@ function getDiscountedPrice(p: any): number {
 
 function openDetails(product: any) {
   selectedProduct.value = product
+  qtyUnidad.value = 0
+  qtyCaja.value = 0
   if (detailsModal) detailsModal.show()
 }
 
@@ -880,7 +944,37 @@ function handleLogout() {
 const cartCount = computed(() => cart.value.reduce((s, i) => s + i.cantidad, 0))
 const cartTotal = computed(() => cart.value.reduce((s, i) => s + (i.cantidad * i.precio), 0))
 
-function addToCart(p: any) {
+function addToCartCombined() {
+  if (qtyUnidad.value === 0 && qtyCaja.value === 0) {
+    Swal.fire({ icon: 'warning', title: 'Atención', text: 'Selecciona al menos una cantidad para llevar al carrito.' })
+    return
+  }
+
+  const stockNeededUnidad = qtyUnidad.value * 1;
+  const stockNeededCaja = qtyCaja.value * (selectedProduct.value.unidadesPorCaja || 1);
+  const currentTotalInCart = cart.value.filter(i => i.productoId === selectedProduct.value.id).reduce((s, i) => s + (i.cantidad * i.factorUnidades), 0);
+
+  if (currentTotalInCart + stockNeededUnidad + stockNeededCaja > selectedProduct.value.stock) {
+    Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: `No hay suficiente stock. Ya tienes ${currentTotalInCart} u. en el carrito. Stock total: ${selectedProduct.value.stock} u.` })
+    return
+  }
+
+  let added = false;
+  if (qtyUnidad.value > 0) {
+    addToCart(selectedProduct.value, 'Unidad', qtyUnidad.value, false);
+    added = true;
+  }
+  if (qtyCaja.value > 0) {
+    addToCart(selectedProduct.value, 'Caja', qtyCaja.value, false);
+    added = true;
+  }
+  
+  if (added) {
+    if (detailsModal) detailsModal.hide()
+  }
+}
+
+function addToCart(p: any, tipoVenta: string = 'Unidad', cantidad: number = 1, hideModal: boolean = true) {
   if (!authStore.isLoggedIn) {
     Swal.fire({
       icon: 'info',
@@ -903,25 +997,50 @@ function addToCart(p: any) {
     return
   }
   
-  const existing = cart.value.find(i => i.productoId === p.id)
+  const existing = cart.value.find(i => i.productoId === p.id && i.tipoVenta === tipoVenta)
+  const factor = tipoVenta === 'Caja' ? (p.unidadesPorCaja || 1) : 1
+  
+  // Calculate total consumed stock for this product in the cart
+  const currentTotalInCart = cart.value.filter(i => i.productoId === p.id).reduce((s, i) => s + (i.cantidad * i.factorUnidades), 0)
+
+  if (currentTotalInCart + (factor * cantidad) > p.stock) {
+    Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: `No hay más stock disponible de ${p.nombre}.` })
+    return
+  }
+
   if (existing) {
-    if (existing.cantidad < p.stock) {
-      existing.cantidad++
-      toastSuccess(`Agregado al carrito: ${p.nombre}`)
-    } else {
-      Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: `No hay más stock disponible de ${p.nombre}.` })
-    }
+    existing.cantidad += cantidad
+    toastSuccess(`Agregado al carrito: ${p.nombre} (${tipoVenta}) x${cantidad}`)
   } else {
+    let precio = getDiscountedPrice(p)
+    if (tipoVenta === 'Caja') {
+       const discount = getActiveDiscount(p)
+       precio = discount > 0 ? Number(p.precioCaja) * (1 - discount / 100) : Number(p.precioCaja)
+    }
+
     cart.value.push({
       productoId: p.id,
       nombre: p.nombre,
       codigo: p.codigo,
-      cantidad: 1,
-      precio: getDiscountedPrice(p),
-      stock: p.stock
+      cantidad: cantidad,
+      precio: precio,
+      stock: p.stock,
+      tipoVenta: tipoVenta,
+      factorUnidades: factor
     })
-    toastSuccess(`Agregado al carrito: ${p.nombre}`)
+    toastSuccess(`Agregado al carrito: ${p.nombre} (${tipoVenta}) x${cantidad}`)
   }
+  if (hideModal && detailsModal) detailsModal.hide()
+}
+
+function badgeEstado(estado: string) {
+  const map: Record<string, string> = {
+    Pendiente: 'bg-warning text-dark',
+    Confirmada: 'bg-info text-dark',
+    Entregada: 'bg-success',
+    Anulada: 'bg-danger',
+  }
+  return map[estado] || 'bg-secondary'
 }
 
 function toastSuccess(msg: string) {
@@ -945,10 +1064,13 @@ function removeFromCart(idx: number) {
 
 function increaseQty(idx: number) {
   const item = cart.value[idx]
-  if (item.cantidad < item.stock) {
+  // Calculate total consumed stock for this product in the cart
+  const currentTotalInCart = cart.value.filter(i => i.productoId === item.productoId).reduce((s, i) => s + (i.cantidad * i.factorUnidades), 0)
+
+  if (currentTotalInCart + item.factorUnidades <= item.stock) {
     item.cantidad++
   } else {
-    Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: 'No hay más stock disponible.' })
+    Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: 'No hay más stock disponible para este producto.' })
   }
 }
 
@@ -973,8 +1095,9 @@ async function confirmarCompra() {
     await http.post('ventas', {
       clienteId: clienteId,
       usuarioId: authStore.user?.id,
-      detalles: cart.value.map(i => ({ productoId: i.productoId, cantidad: i.cantidad, precio: i.precio })),
-      pagos: [{ metodoPagoId: cartMetodoPagoId.value, monto: cartTotal.value }]
+      detalles: cart.value.map(i => ({ productoId: i.productoId, cantidad: i.cantidad, precio: i.precio, tipoVenta: i.tipoVenta })),
+      pagos: [{ metodoPagoId: cartMetodoPagoId.value, monto: cartTotal.value }],
+      estado: 'Pendiente'
     })
     
     await Swal.fire({
@@ -1130,6 +1253,7 @@ function subscribeNewsletter() {
 }
 
 .brand-title {
+  font-family: 'Cinzel', serif;
   font-size: 6rem;
   font-weight: 900;
   letter-spacing: 6px;
@@ -1138,7 +1262,8 @@ function subscribeNewsletter() {
 }
 
 .subtitle {
-  font-weight: 300;
+  font-family: 'Cinzel', serif;
+  font-weight: 500;
   letter-spacing: 4px;
   color: #f5f5f5 !important;
   text-transform: uppercase;
