@@ -502,7 +502,7 @@
                   <div class="mt-2" v-if="selectedProduct.stock >= 1">
                     <div class="input-group input-group-sm mx-auto" style="width: 100px;">
                       <button class="btn btn-outline-secondary" type="button" @click="qtyUnidad > 0 ? qtyUnidad-- : null" style="padding: 0 12px;">-</button>
-                      <input type="text" class="form-control text-center bg-transparent text-white p-0 border-secondary fw-bold" v-model.number="qtyUnidad" readonly>
+                      <input type="number" min="0" step="1" class="form-control text-center bg-transparent text-white p-0 border-secondary fw-bold no-arrows" v-model.number="qtyUnidad" @input="sanitizeUnidad">
                       <button class="btn btn-outline-secondary" type="button" @click="qtyUnidad < selectedProduct.stock ? qtyUnidad++ : null" style="padding: 0 12px;">+</button>
                     </div>
                   </div>
@@ -522,7 +522,7 @@
                   <div class="mt-2" v-if="selectedProduct.stock >= selectedProduct.unidadesPorCaja">
                     <div class="input-group input-group-sm mx-auto" style="width: 100px;">
                       <button class="btn btn-outline-secondary" type="button" @click="qtyCaja > 0 ? qtyCaja-- : null" style="padding: 0 12px;">-</button>
-                      <input type="text" class="form-control text-center bg-transparent text-white p-0 border-secondary fw-bold" v-model.number="qtyCaja" readonly>
+                      <input type="number" min="0" step="1" class="form-control text-center bg-transparent text-white p-0 border-secondary fw-bold no-arrows" v-model.number="qtyCaja" @input="sanitizeCaja">
                       <button class="btn btn-outline-secondary" type="button" @click="(qtyCaja + 1) * selectedProduct.unidadesPorCaja <= selectedProduct.stock ? qtyCaja++ : null" style="padding: 0 12px;">+</button>
                     </div>
                   </div>
@@ -943,6 +943,20 @@ function handleLogout() {
 // Shopping Cart Actions
 const cartCount = computed(() => cart.value.reduce((s, i) => s + i.cantidad, 0))
 const cartTotal = computed(() => cart.value.reduce((s, i) => s + (i.cantidad * i.precio), 0))
+
+function sanitizeUnidad() {
+  if (qtyUnidad.value === null || qtyUnidad.value === undefined || qtyUnidad.value === '') return;
+  let val = Math.floor(Number(qtyUnidad.value));
+  if (isNaN(val) || val < 0) val = 0;
+  qtyUnidad.value = val;
+}
+
+function sanitizeCaja() {
+  if (qtyCaja.value === null || qtyCaja.value === undefined || qtyCaja.value === '') return;
+  let val = Math.floor(Number(qtyCaja.value));
+  if (isNaN(val) || val < 0) val = 0;
+  qtyCaja.value = val;
+}
 
 function addToCartCombined() {
   if (qtyUnidad.value === 0 && qtyCaja.value === 0) {
