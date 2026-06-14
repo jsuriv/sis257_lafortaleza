@@ -40,6 +40,6 @@ export class CategoriasService {
 
   async remove(id: number): Promise<void> {
     const categoria = await this.findOne(id);
-    await this.categoriaRepository.remove(categoria);
+    await this.categoriaRepository.softRemove(categoria);
   }
 }

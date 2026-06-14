@@ -3,6 +3,8 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
 import { Venta } from '../../ventas/entities/venta.entity';
@@ -33,8 +35,14 @@ export class Cliente {
   @Column({ default: true })
   estado: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
+  fechaCreacion: Date;
+
+  @UpdateDateColumn({ name: 'fecha_modificacion', type: 'timestamp' })
+  fechaModificacion: Date;
+
+  @DeleteDateColumn({ name: 'fecha_eliminacion', type: 'timestamp', nullable: true })
+  fechaEliminacion: Date;
 
   // Relaciones
   @OneToMany(() => Venta, (venta) => venta.cliente)

@@ -1,6 +1,6 @@
-import { IsNumber, IsArray, ValidateNested, IsOptional } from 'class-validator';
+import { IsNumber, IsArray, ValidateNested, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateDetalleVentaDto {
   @ApiProperty({ example: 1 })
@@ -27,13 +27,19 @@ export class CreatePagoVentaDto {
 }
 
 export class CreateVentaDto {
-  @ApiProperty({ example: 1 })
+  @ApiPropertyOptional({ example: 1, description: 'ID del cliente. Si se omite, se usa Consumidor Final (NIT: 0)' })
   @IsNumber()
-  clienteId: number;
+  @IsOptional()
+  clienteId?: number;
 
   @ApiProperty({ example: 1 })
   @IsNumber()
   usuarioId: number;
+
+  @ApiPropertyOptional({ example: '/uploads/comprobantes/qr-12345.jpg', description: 'URL del comprobante QR de pago' })
+  @IsString()
+  @IsOptional()
+  comprobanteQr?: string;
 
   @ApiProperty({ type: [CreateDetalleVentaDto] })
   @IsArray()

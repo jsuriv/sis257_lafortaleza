@@ -6,11 +6,12 @@ import { Venta } from './entities/venta.entity';
 import { DetalleVenta } from '../detalles-venta/entities/detalle-venta.entity';
 import { Producto } from '../productos/entities/producto.entity';
 import { Pago } from '../pagos/entities/pago.entity';
+import { Cliente } from '../clientes/entities/cliente.entity';
 import { AuditoriaModule } from '../auditoria/auditoria.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Venta, DetalleVenta, Producto, Pago]),
+    TypeOrmModule.forFeature([Venta, DetalleVenta, Producto, Pago, Cliente]),
     AuditoriaModule,
   ],
   controllers: [VentasController],

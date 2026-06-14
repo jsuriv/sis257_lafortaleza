@@ -2,6 +2,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  CreateDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
@@ -18,6 +19,12 @@ export class Pago {
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   fecha: Date;
+
+  @Column({ name: 'comprobante_referencia', type: 'varchar', length: 255, nullable: true })
+  comprobanteReferencia: string | null;
+
+  @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
+  fechaCreacion: Date;
 
   // Relaciones
   @ManyToOne(() => Venta, (venta) => venta.pagos)

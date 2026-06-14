@@ -94,6 +94,6 @@ export class ComprasService {
 
   async remove(id: number): Promise<void> {
     const compra = await this.findOne(id);
-    await this.compraRepository.remove(compra);
+    await this.compraRepository.softRemove(compra);
   }
 }

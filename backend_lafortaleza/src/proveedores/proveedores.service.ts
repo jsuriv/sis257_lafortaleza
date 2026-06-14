@@ -37,6 +37,6 @@ export class ProveedoresService {
 
   async remove(id: number): Promise<void> {
     const proveedor = await this.findOne(id);
-    await this.proveedorRepository.remove(proveedor);
+    await this.proveedorRepository.softRemove(proveedor);
   }
 }

@@ -2,6 +2,8 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  CreateDateColumn,
+  UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
 import { Pago } from '../../pagos/entities/pago.entity';
@@ -16,6 +18,12 @@ export class MetodoPago {
 
   @Column({ length: 255, nullable: true })
   descripcion: string;
+
+  @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
+  fechaCreacion: Date;
+
+  @UpdateDateColumn({ name: 'fecha_modificacion', type: 'timestamp' })
+  fechaModificacion: Date;
 
   // Relaciones
   @OneToMany(() => Pago, (pago) => pago.metodoPago)

@@ -37,6 +37,6 @@ export class RolesService {
 
   async remove(id: number): Promise<void> {
     const rol = await this.findOne(id);
-    await this.rolRepository.remove(rol);
+    await this.rolRepository.softRemove(rol);
   }
 }
