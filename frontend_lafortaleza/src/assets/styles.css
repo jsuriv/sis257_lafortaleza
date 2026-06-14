@@ -284,6 +284,16 @@ body {
   color: var(--text-secondary) !important;
 }
 
+/* Hide native number arrows */
+.no-arrows::-webkit-outer-spin-button,
+.no-arrows::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-arrows[type=number] {
+  -moz-appearance: textfield;
+}
+
 .form-label {
   font-size: 0.78rem;
   font-weight: 600;

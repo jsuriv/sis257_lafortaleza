@@ -77,6 +77,15 @@
           </div>
         </div>
 
+<<<<<<< HEAD
+=======
+        <!-- Dirección de Entrega -->
+        <div class="stat-card mb-3">
+          <h6 class="mb-2 text-gold"><i class="bi bi-truck me-2"></i>Dirección de Entrega</h6>
+          <input type="text" class="form-control form-control-sm" placeholder="Opcional. Ej: Av. Las Americas #123" v-model="direccionEntrega" />
+        </div>
+
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
         <!-- Selector de Productos -->
         <div class="stat-card">
           <h6 class="mb-3 text-gold"><i class="bi bi-search me-2"></i>Agregar Productos</h6>
@@ -93,6 +102,7 @@
               @click="addProduct(p)"
             >
               <div>
+<<<<<<< HEAD
                 <div class="fw-semibold" style="font-size: 0.875rem;">{{ p.nombre }}</div>
                 <small class="text-secondary">{{ p.codigo }} | Stock: <span :class="p.stock <= p.stockMinimo ? 'text-danger' : 'text-success'">{{ p.stock }}</span></small>
               </div>
@@ -106,6 +116,33 @@
                   <div class="fw-bold" style="color:var(--success); font-size:0.875rem;">Bs. {{ Number(p.precioVenta).toFixed(2) }}</div>
                 </template>
                 <div><button class="btn btn-sm mt-1" style="border:1px solid var(--border-color); color:var(--text-secondary); border-radius:6px;"><i class="bi bi-plus"></i></button></div>
+=======
+                <div class="fw-semibold" style="font-size: 0.875rem;">{{ p.nombre }} <span class="text-secondary fw-normal" style="font-size:0.75rem;">({{ p.unidadMedida || 'Unidad' }})</span></div>
+                <small class="text-secondary">{{ p.codigo }} | Stock: <span :class="p.stock <= p.stockMinimo ? 'text-danger' : 'text-success'">{{ p.stock }}</span></small>
+              </div>
+              <div class="text-end">
+                <div class="d-flex align-items-center justify-content-end gap-2 mb-1">
+                  <div class="text-end">
+                    <small class="text-secondary d-block" style="font-size:0.7rem; line-height:1;">Unidad</small>
+                    <template v-if="getActiveDiscount(p) > 0">
+                      <span class="badge-promo-activa me-1">{{ getActiveDiscount(p) }}% DTO</span>
+                      <div class="fw-bold" style="color:var(--success); font-size:0.875rem;">Bs. {{ getDiscountedPrice(p).toFixed(2) }}</div>
+                    </template>
+                    <template v-else>
+                      <div class="fw-bold" style="color:var(--success); font-size:0.875rem;">Bs. {{ Number(p.precioVenta).toFixed(2) }}</div>
+                    </template>
+                  </div>
+                  <button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--text-secondary); border-radius:6px; padding:2px 6px;" @click.stop="addProduct(p, 'Unidad')"><i class="bi bi-plus"></i></button>
+                </div>
+                
+                <div class="d-flex align-items-center justify-content-end gap-2" v-if="p.precioCaja">
+                  <div class="text-end">
+                    <small class="text-secondary d-block" style="font-size:0.7rem; line-height:1;">Caja ({{p.unidadesPorCaja}} un)</small>
+                    <div class="fw-bold" style="color:var(--primary-light); font-size:0.875rem;">Bs. {{ Number(p.precioCaja).toFixed(2) }}</div>
+                  </div>
+                  <button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--primary-light); border-radius:6px; padding:2px 6px;" @click.stop="addProduct(p, 'Caja')"><i class="bi bi-plus"></i></button>
+                </div>
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
               </div>
             </div>
             <div v-if="filteredProducts.length === 0" class="text-center text-secondary py-4" style="font-size:0.875rem;">
@@ -128,12 +165,22 @@
 
           <div v-for="(item, i) in cart" :key="i" class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid rgba(212,175,55,0.08);">
             <div style="flex:1; min-width:0;">
+<<<<<<< HEAD
               <div class="fw-semibold text-truncate" style="font-size:0.85rem;">{{ item.nombre }}</div>
               <div class="d-flex align-items-center gap-2 mt-1">
                 <button class="btn btn-sm" style="padding:1px 7px; border:1px solid var(--border-color); border-radius:5px; color:var(--text-secondary);" @click="item.cantidad > 1 ? item.cantidad-- : removeItem(i)">-</button>
                 <span style="font-size:0.85rem; min-width:20px; text-align:center;">{{ item.cantidad }}</span>
                 <button class="btn btn-sm" style="padding:1px 7px; border:1px solid var(--border-color); border-radius:5px; color:var(--text-secondary);" @click="item.cantidad++">+</button>
                 <span class="text-secondary" style="font-size:0.78rem;">× Bs. {{ Number(item.precio).toFixed(2) }}</span>
+=======
+              <div class="fw-semibold text-truncate" style="font-size:0.85rem;">{{ item.nombre }} <span class="text-secondary fw-normal" style="font-size:0.75rem;">({{ item.tipoVenta }})</span></div>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <button class="btn btn-sm" style="padding:1px 7px; border:1px solid var(--border-color); border-radius:5px; color:var(--text-secondary);" @click="item.cantidad > 1 ? item.cantidad-- : removeItem(i)">-</button>
+                <span style="font-size:0.85rem; min-width:20px; text-align:center;">{{ item.cantidad }}</span>
+                <button class="btn btn-sm" style="padding:1px 7px; border:1px solid var(--border-color); border-radius:5px; color:var(--text-secondary);" @click="increaseQty(i)">+</button>
+                <span class="text-secondary" style="font-size:0.78rem;">× Bs. {{ Number(item.precio).toFixed(2) }}</span>
+                <span class="text-secondary" style="font-size:0.7rem;" v-if="item.tipoVenta === 'Caja'">(Bs. {{ (Number(item.precio) / item.factorUnidades).toFixed(2) }} c/u)</span>
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
               </div>
             </div>
             <div class="text-end ms-2">
@@ -150,6 +197,26 @@
               <span class="fw-bold" style="font-size:1.4rem; color:var(--primary); font-family:'Outfit',sans-serif;">Bs. {{ total.toFixed(2) }}</span>
             </div>
 
+<<<<<<< HEAD
+=======
+            <!-- Pago / Cambio -->
+            <div class="row mb-3">
+              <div class="col-6">
+                <label class="form-label" style="font-size:0.8rem;">Monto Recibido</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text border-secondary bg-transparent text-secondary">Bs.</span>
+                  <input type="number" class="form-control" v-model.number="montoRecibido" min="0" step="0.5" placeholder="0.00" />
+                </div>
+              </div>
+              <div class="col-6">
+                <label class="form-label" style="font-size:0.8rem;">Cambio</label>
+                <div class="form-control form-control-sm text-end fw-bold" :class="cambio >= 0 ? 'text-success' : 'text-danger'" style="background:rgba(0,0,0,0.1); border-color:var(--border-color);">
+                  Bs. {{ cambio.toFixed(2) }}
+                </div>
+              </div>
+            </div>
+
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
             <!-- Método de Pago -->
             <div class="mb-3">
               <label class="form-label">Método de Pago</label>
@@ -273,9 +340,19 @@ const clienteId = ref<number | null>(null)
 const hoveredCliente = ref<number | null>(null)
 
 // Cart
+<<<<<<< HEAD
 const cart = ref<{ productoId: number; nombre: string; cantidad: number; precio: number }[]>([])
 const metodoPagoId = ref<number | null>(null)
 
+=======
+const cart = ref<{ productoId: number; nombre: string; cantidad: number; precio: number; unidadMedida: string; tipoVenta: string; factorUnidades: number; stock: number }[]>([])
+const metodoPagoId = ref<number | null>(null)
+
+const direccionEntrega = ref('')
+const montoRecibido = ref<number | ''>('')
+
+
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
 // QR
 const qrInput = ref<HTMLInputElement | null>(null)
 const qrFile = ref<File | null>(null)
@@ -352,6 +429,7 @@ const filteredProducts = computed(() =>
 )
 
 const total = computed(() => cart.value.reduce((s, i) => s + i.cantidad * i.precio, 0))
+<<<<<<< HEAD
 
 onMounted(async () => {
   const [p, m] = await Promise.all([http.get('productos'), http.get('metodos-pago')])
@@ -364,6 +442,25 @@ onMounted(async () => {
   }
 })
 
+=======
+const cambio = computed(() => {
+  const recibido = Number(montoRecibido.value) || 0
+  if (recibido === 0) return 0
+  return recibido - total.value
+})
+
+onMounted(async () => {
+  const [p, m] = await Promise.all([http.get('productos'), http.get('metodos-pago')])
+  productos.value = p.data
+  metodosPago.value = m.data
+  if (metodosPago.value.length) metodoPagoId.value = metodosPago.value[0].id
+
+  if (modalClienteRef.value) {
+    modalCliente = new Modal(modalClienteRef.value)
+  }
+})
+
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
 // Cliente search
 let searchTimeout: ReturnType<typeof setTimeout>
 async function buscarCliente() {
@@ -406,17 +503,64 @@ function getDiscountedPrice(p: any): number {
 }
 
 // Cart
+<<<<<<< HEAD
 function addProduct(p: any) {
   const existing = cart.value.find(i => i.productoId === p.id)
   if (existing) {
     existing.cantidad++
   } else {
     cart.value.push({ productoId: p.id, nombre: p.nombre, cantidad: 1, precio: getDiscountedPrice(p) })
+=======
+function addProduct(p: any, tipoVenta: string = 'Unidad') {
+  const existing = cart.value.find(i => i.productoId === p.id && i.tipoVenta === tipoVenta)
+  const factor = tipoVenta === 'Caja' ? (p.unidadesPorCaja || 1) : 1
+  
+  const currentTotalInCart = cart.value.filter(i => i.productoId === p.id).reduce((s, i) => s + (i.cantidad * i.factorUnidades), 0)
+
+  if (currentTotalInCart + factor > p.stock) {
+    Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: `No hay más stock disponible de ${p.nombre}.` })
+    return
+  }
+
+  if (existing) {
+    existing.cantidad++
+  } else {
+    let precio = getDiscountedPrice(p)
+    if (tipoVenta === 'Caja') {
+       const discount = getActiveDiscount(p)
+       precio = discount > 0 ? Number(p.precioCaja) * (1 - discount / 100) : Number(p.precioCaja)
+    }
+
+    cart.value.push({ 
+      productoId: p.id, 
+      nombre: p.nombre, 
+      cantidad: 1, 
+      precio: precio, 
+      unidadMedida: p.unidadMedida,
+      tipoVenta: tipoVenta,
+      factorUnidades: factor,
+      stock: p.stock
+    })
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
   }
 }
 
 function removeItem(i: number) { cart.value.splice(i, 1) }
 
+<<<<<<< HEAD
+=======
+function increaseQty(idx: number) {
+  const item = cart.value[idx]
+  const currentTotalInCart = cart.value.filter(i => i.productoId === item.productoId).reduce((s, i) => s + (i.cantidad * i.factorUnidades), 0)
+
+  if (currentTotalInCart + item.factorUnidades <= item.stock) {
+    item.cantidad++
+  } else {
+    Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: 'No hay más stock disponible para este producto.' })
+  }
+}
+
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
 // QR
 function onQrSelect(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
@@ -459,18 +603,39 @@ async function registrarVenta() {
       clienteId: sinCliente.value ? undefined : (clienteId.value || undefined),
       usuarioId: authStore.user?.id,
       comprobanteQr,
+<<<<<<< HEAD
       detalles: cart.value.map(i => ({ productoId: i.productoId, cantidad: i.cantidad, precio: i.precio })),
       pagos: [{ metodoPagoId: metodoPagoId.value, monto: total.value }],
+=======
+      direccionEntrega: direccionEntrega.value.trim() || undefined,
+      detalles: cart.value.map(i => ({ productoId: i.productoId, cantidad: i.cantidad, precio: i.precio, tipoVenta: i.tipoVenta })),
+      pagos: [{ metodoPagoId: metodoPagoId.value, monto: total.value, montoRecibido: Number(montoRecibido.value) || total.value, cambio: cambio.value > 0 ? cambio.value : 0 }],
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
     })
 
     await Swal.fire({
       icon: 'success',
       title: '¡Venta registrada!',
+<<<<<<< HEAD
       html: `<strong>Total: Bs. ${total.value.toFixed(2)}</strong>${sinCliente.value ? '<br><small>Registrada como Consumidor Final</small>' : ''}`,
+=======
+      html: `<strong>Total: Bs. ${total.value.toFixed(2)}</strong>${sinCliente.value ? '<br><small>Registrada como Consumidor Final</small>' : ''}${Number(montoRecibido.value) > 0 ? `<br><small>Cambio devuelto: Bs. ${cambio.value.toFixed(2)}</small>` : ''}`,
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
       timer: 2500,
       showConfirmButton: false,
     })
 
+<<<<<<< HEAD
+=======
+    // Reset values
+    cart.value = []
+    sinCliente.value = false
+    limpiarCliente()
+    direccionEntrega.value = ''
+    montoRecibido.value = ''
+    clearQr()
+
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
     const backPath = authStore.user?.rol?.nombre === 'VENDEDOR' ? '/vendedor/ventas' : '/admin/ventas'
     router.push(backPath)
   } catch (e: any) {

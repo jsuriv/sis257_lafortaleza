@@ -73,9 +73,13 @@ export class VentasService {
         if (!producto) {
           throw new NotFoundException(`Producto con ID ${det.productoId} no encontrado`);
         }
-        if (Number(producto.stock) < det.cantidad) {
+        const tipoVenta = det.tipoVenta || 'Unidad';
+        const unidadesPorCaja = producto.unidadesPorCaja || 1;
+        const unidadesAComprar = tipoVenta === 'Caja' ? det.cantidad * unidadesPorCaja : det.cantidad;
+
+        if (Number(producto.stock) < unidadesAComprar) {
           throw new BadRequestException(
-            `Stock insuficiente para "${producto.nombre}". Disponible: ${producto.stock}, Solicitado: ${det.cantidad}`,
+            `Stock insuficiente para "${producto.nombre}". Disponible: ${producto.stock}, Solicitado: ${unidadesAComprar} (en ${tipoVenta}s)`,
           );
         }
         total += det.cantidad * det.precio;
@@ -87,7 +91,11 @@ export class VentasService {
         clienteId: resolvedClienteId,
         total,
         fecha: new Date(),
+<<<<<<< HEAD
         estado: 'Confirmada',
+=======
+        estado: (ventaData.estado as EstadoVenta) || 'Confirmada',
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
         comprobanteQr: comprobanteQr || null,
       });
       const savedVenta = await queryRunner.manager.save(venta);
@@ -101,6 +109,7 @@ export class VentasService {
           cantidad: det.cantidad,
           precio: det.precio,
           subtotal,
+          tipoVenta: det.tipoVenta || 'Unidad',
         });
         await queryRunner.manager.save(detalle);
 
@@ -108,7 +117,12 @@ export class VentasService {
         const producto = await queryRunner.manager.findOne(Producto, {
           where: { id: det.productoId },
         });
-        producto!.stock = Number(producto!.stock) - det.cantidad;
+        
+        const tipoVenta = det.tipoVenta || 'Unidad';
+        const unidadesPorCaja = producto!.unidadesPorCaja || 1;
+        const unidadesARestar = tipoVenta === 'Caja' ? det.cantidad * unidadesPorCaja : det.cantidad;
+
+        producto!.stock = Number(producto!.stock) - unidadesARestar;
         await queryRunner.manager.save(producto!);
       }
 
@@ -118,6 +132,8 @@ export class VentasService {
           ventaId: savedVenta.id,
           metodoPagoId: pago.metodoPagoId,
           monto: pago.monto,
+          montoRecibido: pago.montoRecibido || pago.monto,
+          cambio: pago.cambio || 0,
           fecha: new Date(),
         });
         await queryRunner.manager.save(pagoEntity);

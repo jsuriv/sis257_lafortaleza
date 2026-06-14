@@ -7,7 +7,7 @@
     <div class="search-box mb-3" style="max-width: 350px;"><i class="bi bi-search"></i><input type="text" class="form-control" placeholder="Buscar producto..." v-model="search" /></div>
     <div class="table-dark-custom">
       <table class="table table-hover mb-0">
-        <thead><tr><th>#</th><th>Imagen</th><th>Código</th><th>Nombre</th><th>Categoría</th><th>Marca</th><th>P. Compra</th><th>P. Venta</th><th>Stock</th><th v-if="authStore.isAdmin">Acciones</th></tr></thead>
+        <thead><tr><th>#</th><th>Imagen</th><th>Código</th><th>Nombre</th><th>Categoría</th><th>Marca</th><th>P. Compra</th><th>P. Venta</th><th>P. Caja (Unid.)</th><th>Stock</th><th v-if="authStore.isAdmin">Acciones</th></tr></thead>
         <tbody>
           <tr v-for="(p, i) in filtered" :key="p.id">
             <td>{{ i+1 }}</td>
@@ -23,6 +23,10 @@
             <td><code>{{ p.codigo }}</code></td><td class="fw-semibold">{{ p.nombre }}</td>
             <td class="text-secondary">{{ p.categoria?.nombre || '-' }}</td><td class="text-secondary">{{ p.marca?.nombre || '-' }}</td>
             <td>Bs. {{ Number(p.precioCompra).toFixed(2) }}</td><td>Bs. {{ Number(p.precioVenta).toFixed(2) }}</td>
+            <td>
+              <span v-if="p.precioCaja">Bs. {{ Number(p.precioCaja).toFixed(2) }} <small class="text-secondary">({{ p.unidadesPorCaja }}u)</small></span>
+              <span v-else class="text-secondary">-</span>
+            </td>
             <td><span :class="Number(p.stock) <= Number(p.stockMinimo) ? 'badge badge-stock-low' : 'badge badge-stock-ok'">{{ p.stock }}</span></td>
             <td v-if="authStore.isAdmin"><button class="btn btn-sm btn-outline-info me-1" @click="openModal(p)"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" @click="remove(p.id)"><i class="bi bi-trash"></i></button></td>
           </tr>
@@ -44,6 +48,9 @@
         <div class="col-md-3"><label class="form-label">Precio Venta (Bs.)</label><input class="form-control" type="number" step="0.01" v-model.number="form.precioVenta" /></div>
         <div class="col-md-3"><label class="form-label">Stock</label><input class="form-control" type="number" v-model.number="form.stock" /></div>
         <div class="col-md-3"><label class="form-label">Stock Mínimo</label><input class="form-control" type="number" v-model.number="form.stockMinimo" /></div>
+        <div class="col-md-3"><label class="form-label">Unidad de Medida</label><select class="form-select" v-model="form.unidadMedida"><option value="Unidad">Unidad</option><option value="Paquete">Paquete</option><option value="Botella">Botella</option><option value="Caja">Caja</option></select></div>
+        <div class="col-md-3"><label class="form-label">Precio Caja (Bs.)</label><input class="form-control" type="number" step="0.01" v-model.number="form.precioCaja" placeholder="Opcional" /></div>
+        <div class="col-md-3"><label class="form-label">Unidades x Caja</label><input class="form-control" type="number" v-model.number="form.unidadesPorCaja" placeholder="Opcional" /></div>
         <div class="col-12">
           <label class="form-label">Imagen o Video del Producto</label>
           <div class="input-group">
@@ -80,7 +87,7 @@ import { useAuthStore } from '@/stores/auth'
 const authStore = useAuthStore()
 const items = ref<any[]>([]); const categorias = ref<any[]>([]); const marcas = ref<any[]>([]); const proveedores = ref<any[]>([])
 const search = ref(''); const editing = ref<number|null>(null); const modalRef = ref<HTMLElement>(); let bsModal: Modal
-const form = ref({ nombre: '', codigo: '', descripcion: '', precioCompra: 0, precioVenta: 0, stock: 0, stockMinimo: 5, imagen: '', categoriaId: null as number|null, marcaId: null as number|null, proveedorId: null as number|null })
+const form = ref({ nombre: '', codigo: '', descripcion: '', precioCompra: 0, precioVenta: 0, stock: 0, stockMinimo: 5, unidadMedida: 'Unidad', unidadesPorCaja: 1 as number|null, precioCaja: null as number|null, imagen: '', categoriaId: null as number|null, marcaId: null as number|null, proveedorId: null as number|null })
 const filtered = computed(() => items.value.filter(i => i.nombre.toLowerCase().includes(search.value.toLowerCase()) || i.codigo.toLowerCase().includes(search.value.toLowerCase())))
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -156,6 +163,9 @@ function openModal(item?: any) {
       precioVenta: Number(item.precioVenta),
       stock: Number(item.stock),
       stockMinimo: Number(item.stockMinimo),
+      unidadMedida: item.unidadMedida || 'Unidad',
+      unidadesPorCaja: item.unidadesPorCaja,
+      precioCaja: item.precioCaja ? Number(item.precioCaja) : null,
       imagen: item.imagen || '',
       categoriaId: item.categoriaId,
       marcaId: item.marcaId,
@@ -171,6 +181,9 @@ function openModal(item?: any) {
       precioVenta: 0,
       stock: 0,
       stockMinimo: 5,
+      unidadMedida: 'Unidad',
+      unidadesPorCaja: null,
+      precioCaja: null,
       imagen: '',
       categoriaId: null,
       marcaId: null,
@@ -188,6 +201,8 @@ async function save() {
       precioVenta: Number(form.value.precioVenta),
       stock: Number(form.value.stock),
       stockMinimo: Number(form.value.stockMinimo),
+      unidadesPorCaja: form.value.unidadesPorCaja ? Number(form.value.unidadesPorCaja) : null,
+      precioCaja: form.value.precioCaja ? Number(form.value.precioCaja) : null,
     };
     if (editing.value) {
       await http.patch(`productos/${editing.value}`, payload);

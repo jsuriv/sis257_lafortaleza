@@ -149,7 +149,14 @@
               </thead>
               <tbody>
                 <tr v-for="d in selectedVenta.detalles" :key="d.id">
+<<<<<<< HEAD
                   <td>{{ d.producto?.nombre }}</td>
+=======
+                  <td>
+                    {{ d.producto?.nombre }}
+                    <span class="text-secondary" style="font-size:0.75rem;">({{ d.tipoVenta || 'Unidad' }})</span>
+                  </td>
+>>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
                   <td>{{ d.cantidad }}</td>
                   <td>Bs. {{ Number(d.precio).toFixed(2) }}</td>
                   <td class="text-gold fw-bold">Bs. {{ Number(d.subtotal).toFixed(2) }}</td>
