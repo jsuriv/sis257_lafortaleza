@@ -48,7 +48,17 @@ export class CreateProductoDto {
   @IsOptional()
   unidadMedida?: string;
 
-  @ApiProperty({ example: 12, required: false })
+  @ApiProperty({ example: true, required: false })
+  @IsBoolean()
+  @IsOptional()
+  vendePorUnidad?: boolean;
+
+  @ApiProperty({ example: true, required: false })
+  @IsBoolean()
+  @IsOptional()
+  vendePorCaja?: boolean;
+
+  @ApiProperty({ example: 6, required: false })
   @IsNumber()
   @IsOptional()
   unidadesPorCaja?: number;
@@ -57,6 +67,26 @@ export class CreateProductoDto {
   @IsNumber()
   @IsOptional()
   precioCaja?: number;
+
+  @ApiProperty({ example: 8.50, required: false })
+  @IsNumber()
+  @IsOptional()
+  precioCompraUnidad?: number;
+
+  @ApiProperty({ example: 51.00, required: false })
+  @IsNumber()
+  @IsOptional()
+  precioCompraCaja?: number;
+
+  @ApiProperty({ example: 12.00, required: false })
+  @IsNumber()
+  @IsOptional()
+  precioVentaUnidad?: number;
+
+  @ApiProperty({ example: 72.00, required: false })
+  @IsNumber()
+  @IsOptional()
+  precioVentaCaja?: number;
 
   @ApiProperty({ example: 1 })
   @IsNumber()
@@ -72,4 +102,18 @@ export class CreateProductoDto {
   @IsNumber()
   @IsOptional()
   proveedorId?: number;
+
+  @ApiProperty({ example: 'Alcoholica', required: false })
+  @IsString()
+  @IsOptional()
+  tipoBebida?: string;
+
+  @ApiProperty({ example: false, required: false })
+  @IsBoolean()
+  @IsOptional()
+  esCombo?: boolean;
+
+  @ApiProperty({ example: [{ productoId: 1, cantidad: 2 }], required: false })
+  @IsOptional()
+  items?: any[];
 }

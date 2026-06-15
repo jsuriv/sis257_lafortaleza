@@ -180,16 +180,16 @@
                 <td><code>{{ p.codigo }}</code></td>
                 <td class="fw-semibold text-dark">{{ p.nombre }}</td>
                 <td class="text-secondary">{{ p.categoria?.nombre || 'General' }}</td>
-                <td class="fw-bold text-blue">Bs. {{ Number(p.precioVenta).toFixed(2) }}</td>
-                <td class="text-secondary">
-                  <span v-if="p.precioCaja">Bs. {{ Number(p.precioCaja).toFixed(2) }} <small>({{ p.unidadesPorCaja }}u)</small></span>
-                  <span v-else>-</span>
-                </td>
-                <td>
-                  <span :class="Number(p.stock) <= Number(p.stockMinimo) ? 'badge badge-stock-low' : 'badge badge-stock-ok'">
-                    {{ p.stock }} u.
-                  </span>
-                </td>
+                 <td class="fw-bold text-blue">Bs. {{ Number(p.precioVentaUnidad || p.precioVenta).toFixed(2) }}</td>
+                 <td class="text-secondary">
+                   <span v-if="p.vendePorCaja !== false">Bs. {{ Number(p.precioVentaCaja || p.precioCaja || (Number(p.precioVentaUnidad || p.precioVenta) * (p.unidadesPorCaja || 6))).toFixed(2) }} <small>({{ p.unidadesPorCaja || 6 }}u)</small></span>
+                   <span v-else>-</span>
+                 </td>
+                 <td>
+                   <span :class="Number(p.stock) <= Number(p.stockMinimo) ? 'badge badge-stock-low' : 'badge badge-stock-ok'">
+                     {{ formatStock(p.stock, p.unidadesPorCaja) }}
+                   </span>
+                 </td>
                 <td>
                   <span v-if="Number(p.stock) === 0" class="text-danger fw-bold" style="font-size: 0.78rem;">Agotado</span>
                   <span v-else-if="Number(p.stock) <= Number(p.stockMinimo)" class="text-warning fw-bold" style="font-size: 0.78rem;">Stock Crítico</span>
@@ -337,6 +337,21 @@ function isVideo(url?: string) {
 
 function formatTime(dateStr: string) {
   return new Date(dateStr).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
+}
+
+function formatStock(stock: number, unidadesPorCaja: number) {
+  const totalUnits = Number(stock || 0);
+  const factor = Number(unidadesPorCaja || 6);
+  const cajas = Math.floor(totalUnits / factor);
+  const residuo = totalUnits % factor;
+  
+  if (cajas > 0 && residuo > 0) {
+    return `${totalUnits} u (${cajas} c y ${residuo} u)`;
+  } else if (cajas > 0) {
+    return `${totalUnits} u (${cajas} c)`;
+  } else {
+    return `${totalUnits} u`;
+  }
 }
 
 onMounted(async () => {

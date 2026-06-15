@@ -120,6 +120,105 @@ export class ProductosController {
     return { url: videoUrl };
   }
 
+  @Post('upload-qr')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Subir o reemplazar la imagen del código QR estático para pagos (Solo Admin)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: (req, file, callback) => {
+        const targetDir = join(process.cwd(), '..', 'frontend_lafortaleza', 'public', 'qr');
+        if (!existsSync(targetDir)) {
+          mkdirSync(targetDir, { recursive: true });
+        }
+        callback(null, targetDir);
+      },
+      filename: (req, file, callback) => {
+        const ext = extname(file.originalname);
+        const uniqueSuffix = Date.now();
+        callback(null, `qr-${uniqueSuffix}${ext}`);
+      }
+    }),
+    fileFilter: (req, file, callback) => {
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/i)) {
+        return callback(new Error('Solo se permiten imágenes (.jpg, .jpeg, .png, .webp).'), false);
+      }
+      callback(null, true);
+    }
+  }))
+  uploadQrFile(@UploadedFile() file: any) {
+    if (!file) {
+      return { url: '' };
+    }
+    const targetDir = join(process.cwd(), '..', 'frontend_lafortaleza', 'public', 'qr');
+    
+    try {
+      const files = readdirSync(targetDir);
+      files.forEach((f) => {
+        if (f.startsWith('qr-') && f !== file.filename) {
+          unlinkSync(join(targetDir, f));
+        }
+      });
+    } catch (e) {
+      console.error('Error al limpiar QR anteriores:', e);
+    }
+
+    const qrUrl = `/qr/${file.filename}`;
+    try {
+      writeFileSync(
+        join(targetDir, 'config.json'),
+        JSON.stringify({ qrUrl }, null, 2)
+      );
+    } catch (e) {
+      console.error('Error al guardar config.json:', e);
+    }
+
+    return { url: qrUrl };
+  }
+
+  @Post('restore-qr')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Restablecer el código QR estático predeterminado (Solo Admin)' })
+  restoreQr() {
+    const targetDir = join(process.cwd(), '..', 'frontend_lafortaleza', 'public', 'qr');
+    
+    try {
+      const files = readdirSync(targetDir);
+      files.forEach((f) => {
+        if (f.startsWith('qr-')) {
+          unlinkSync(join(targetDir, f));
+        }
+      });
+    } catch (e) {
+      console.error('Error al limpiar QR anteriores:', e);
+    }
+
+    const qrUrl = '/qr/default-qr.png';
+    try {
+      writeFileSync(
+        join(targetDir, 'config.json'),
+        JSON.stringify({ qrUrl }, null, 2)
+      );
+    } catch (e) {
+      console.error('Error al guardar config.json:', e);
+    }
+
+    return { url: qrUrl };
+  }
+
   @Post('upload')
   @ApiOperation({ summary: 'Subir una imagen o video para un producto' })
   @ApiConsumes('multipart/form-data')
@@ -199,6 +298,12 @@ export class ProductosController {
   @ApiOperation({ summary: 'Obtener un producto por ID' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productosService.findOne(id);
+  }
+
+  @Get(':id/combo-items')
+  @ApiOperation({ summary: 'Obtener los componentes de un combo' })
+  getComboItems(@Param('id', ParseIntPipe) id: number) {
+    return this.productosService.getComboItems(id);
   }
 
   @Patch(':id')

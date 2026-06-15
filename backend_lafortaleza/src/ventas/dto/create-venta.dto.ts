@@ -2,6 +2,16 @@ import { IsNumber, IsArray, ValidateNested, IsOptional, IsString } from 'class-v
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+export class CreateComboComponenteDto {
+  @ApiProperty({ example: 2 })
+  @IsNumber()
+  productoId: number;
+
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  cantidad: number;
+}
+
 export class CreateDetalleVentaDto {
   @ApiProperty({ example: 1 })
   @IsNumber()
@@ -19,6 +29,17 @@ export class CreateDetalleVentaDto {
   @IsString()
   @IsOptional()
   tipoVenta?: string;
+
+  @ApiPropertyOptional({ example: false })
+  @IsOptional()
+  conHielo?: boolean;
+
+  @ApiPropertyOptional({ type: [CreateComboComponenteDto] })
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateComboComponenteDto)
+  componentes?: CreateComboComponenteDto[];
 }
 
 export class CreatePagoVentaDto {
@@ -56,14 +77,36 @@ export class CreateVentaDto {
   @IsOptional()
   comprobanteQr?: string;
 
-<<<<<<< HEAD
-=======
   @ApiPropertyOptional({ example: 'Av. Las Americas #123', description: 'Dirección de entrega' })
   @IsString()
   @IsOptional()
   direccionEntrega?: string;
 
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
+  @ApiPropertyOptional({ example: 'Tienda', description: 'Tipo de entrega: Tienda o Delivery' })
+  @IsString()
+  @IsOptional()
+  tipoEntrega?: string;
+
+  @ApiPropertyOptional({ example: 'Av. Las Americas #123', description: 'Dirección de delivery' })
+  @IsString()
+  @IsOptional()
+  direccion?: string;
+
+  @ApiPropertyOptional({ example: 'Frente a la plaza principal', description: 'Referencia de delivery' })
+  @IsString()
+  @IsOptional()
+  referencia?: string;
+
+  @ApiPropertyOptional({ example: '71234567', description: 'Teléfono de contacto para delivery' })
+  @IsString()
+  @IsOptional()
+  telefonoContacto?: string;
+
+  @ApiPropertyOptional({ example: 10.00, description: 'Costo del delivery' })
+  @IsNumber()
+  @IsOptional()
+  costoDelivery?: number;
+
   @ApiProperty({ type: [CreateDetalleVentaDto] })
   @IsArray()
   @ValidateNested({ each: true })

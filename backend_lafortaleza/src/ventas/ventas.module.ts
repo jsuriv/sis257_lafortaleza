@@ -8,14 +8,17 @@ import { Producto } from '../productos/entities/producto.entity';
 import { Pago } from '../pagos/entities/pago.entity';
 import { Cliente } from '../clientes/entities/cliente.entity';
 import { AuditoriaModule } from '../auditoria/auditoria.module';
+import { Delivery } from './entities/delivery.entity';
+import { DeliveriesService } from './deliveries.service';
+import { DeliveriesController } from './deliveries.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Venta, DetalleVenta, Producto, Pago, Cliente]),
+    TypeOrmModule.forFeature([Venta, DetalleVenta, Producto, Pago, Cliente, Delivery]),
     AuditoriaModule,
   ],
-  controllers: [VentasController],
-  providers: [VentasService],
-  exports: [VentasService],
+  controllers: [VentasController, DeliveriesController],
+  providers: [VentasService, DeliveriesService],
+  exports: [VentasService, DeliveriesService],
 })
 export class VentasModule {}

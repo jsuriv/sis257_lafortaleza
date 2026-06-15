@@ -40,13 +40,22 @@
         <router-link to="/admin/productos" class="nav-link" @click="sidebarOpen = false">
           <i class="bi bi-box-seam-fill"></i> Productos
         </router-link>
+        <router-link to="/admin/combos" class="nav-link" @click="sidebarOpen = false">
+          <i class="bi bi-boxes"></i> Combos
+        </router-link>
 
         <div class="nav-section-title">Operaciones</div>
+        <router-link to="/admin/caja" class="nav-link" @click="sidebarOpen = false">
+          <i class="bi bi-cash-coin"></i> Apertura/Cierre Caja
+        </router-link>
         <router-link to="/admin/compras" class="nav-link" @click="sidebarOpen = false">
           <i class="bi bi-bag-plus-fill"></i> Compras
         </router-link>
         <router-link to="/admin/ventas" class="nav-link" @click="sidebarOpen = false">
           <i class="bi bi-cart-check-fill"></i> Ventas
+        </router-link>
+        <router-link to="/admin/delivery" class="nav-link" @click="sidebarOpen = false">
+          <i class="bi bi-geo-alt-fill"></i> Control Deliveries
         </router-link>
         <router-link to="/admin/promociones" class="nav-link" @click="sidebarOpen = false">
           <i class="bi bi-percent text-gold"></i> Promociones
@@ -86,9 +95,22 @@
           </button>
         </div>
       </header>
-      <div class="content-area">
+      <div class="content-area flex-grow-1">
         <router-view />
       </div>
+      <!-- Footer del Sistema -->
+      <footer class="system-footer text-center py-3 border-top" style="border-color: var(--border-color) !important; background-color: var(--bg-card); font-size: 0.72rem; color: var(--text-secondary);">
+        <div class="container-fluid">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <span>&copy; 2026 LA FORTALEZA. Todos los derechos reservados.</span>
+            <span>
+              <i class="bi bi-geo-alt-fill text-gold me-1"></i>Calle El Paraiso 123, Sucre - Bolivia &nbsp;|&nbsp;
+              <i class="bi bi-telephone-fill text-gold me-1"></i>+591 75781303 &nbsp;|&nbsp;
+              <i class="bi bi-envelope-fill text-gold me-1"></i>contacto@lafortaleza.com.bo
+            </span>
+          </div>
+        </div>
+      </footer>
     </div>
 
     <!-- Mobile Backdrop -->

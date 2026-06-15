@@ -22,7 +22,7 @@
             <div class="form-check form-switch mb-0">
               <input class="form-check-input" type="checkbox" id="sinCliente" v-model="sinCliente" style="cursor:pointer;" />
               <label class="form-check-label text-secondary" for="sinCliente" style="font-size:0.8rem; cursor:pointer;">
-                Consumidor Final
+                Cliente Ocasional
               </label>
             </div>
           </div>
@@ -35,7 +35,7 @@
                 <input
                   type="text"
                   class="form-control"
-                  placeholder="Buscar por nombre, apellido o CI/NIT..."
+                  placeholder="Buscar por nombre, apellido, teléfono o CI..."
                   v-model="clienteQuery"
                   @input="buscarCliente"
                 />
@@ -58,7 +58,7 @@
               >
                 <div>
                   <div class="fw-semibold" style="font-size:0.875rem;">{{ c.nombre }} {{ c.apellido }}</div>
-                  <small class="text-secondary">CI/NIT: {{ c.ciNit || '—' }}</small>
+                  <small class="text-secondary">CI/NIT: {{ c.ciNit || '—' }} | Tel: {{ c.telefono || '—' }}</small>
                 </div>
                 <i v-if="clienteId === c.id" class="bi bi-check-circle-fill text-gold"></i>
               </div>
@@ -73,19 +73,51 @@
           </div>
           <div v-else class="d-flex align-items-center gap-2 p-2 rounded" style="background:rgba(212,175,55,0.06); border:1px solid var(--border-color);">
             <i class="bi bi-person-fill text-secondary"></i>
-            <span class="text-secondary" style="font-size:0.875rem;">Venta a <strong>Consumidor Final</strong> (NIT: 0) — sin registro de cliente</span>
+            <span class="text-secondary" style="font-size:0.875rem;">Venta a <strong>Cliente Ocasional</strong> (NIT: 0) — sin registro de cliente</span>
           </div>
         </div>
 
-<<<<<<< HEAD
-=======
-        <!-- Dirección de Entrega -->
+        <!-- Tipo de Entrega & Delivery -->
         <div class="stat-card mb-3">
-          <h6 class="mb-2 text-gold"><i class="bi bi-truck me-2"></i>Dirección de Entrega</h6>
-          <input type="text" class="form-control form-control-sm" placeholder="Opcional. Ej: Av. Las Americas #123" v-model="direccionEntrega" />
+          <h6 class="mb-3 text-gold"><i class="bi bi-truck me-2"></i>Tipo de Entrega</h6>
+          <div class="d-flex gap-3 mb-3">
+            <div class="flex-grow-1">
+              <input type="radio" class="btn-check" name="tipoEntrega" id="entregaTienda" value="Tienda" v-model="tipoEntrega" />
+              <label class="btn btn-outline-custom w-100 py-2 d-flex align-items-center justify-content-center gap-2" for="entregaTienda" style="border-radius: 8px;">
+                <i class="bi bi-shop"></i> Recoger en Tienda
+              </label>
+            </div>
+            <div class="flex-grow-1">
+              <input type="radio" class="btn-check" name="tipoEntrega" id="entregaDelivery" value="Delivery" v-model="tipoEntrega" />
+              <label class="btn btn-outline-custom w-100 py-2 d-flex align-items-center justify-content-center gap-2" for="entregaDelivery" style="border-radius: 8px;">
+                <i class="bi bi-geo-alt"></i> Delivery
+              </label>
+            </div>
+          </div>
+
+          <!-- Si selecciona Delivery solicitar Dirección, Referencia, Teléfono -->
+          <div v-if="tipoEntrega === 'Delivery'" class="p-3 rounded border" style="background: rgba(22, 22, 22, 0.4); border-color: rgba(212,175,55,0.15) !important;">
+            <div class="row g-2">
+              <div class="col-12">
+                <label class="form-label mb-1" style="font-size: 0.75rem;">Dirección *</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Ej: Av. Las Americas #123" v-model="direccion" required />
+              </div>
+              <div class="col-12">
+                <label class="form-label mb-1" style="font-size: 0.75rem;">Referencia</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Ej: Portón dorado al lado de la farmacia" v-model="referencia" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label mb-1" style="font-size: 0.75rem;">Teléfono de Contacto *</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Ej: 71234567" v-model="telefonoContacto" required />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label mb-1" style="font-size: 0.75rem;">Costo de Delivery (Bs.)</label>
+                <input type="number" class="form-control form-control-sm" v-model.number="costoDelivery" min="0" step="0.5" />
+              </div>
+            </div>
+          </div>
         </div>
 
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
         <!-- Selector de Productos -->
         <div class="stat-card">
           <h6 class="mb-3 text-gold"><i class="bi bi-search me-2"></i>Agregar Productos</h6>
@@ -99,29 +131,14 @@
               :key="p.id"
               class="d-flex justify-content-between align-items-center py-2 px-2 rounded product-item-row"
               style="border-bottom: 1px solid var(--border-color); cursor: pointer; transition:background 0.15s;"
-              @click="addProduct(p)"
+              @click="p.vendePorUnidad !== false ? addProduct(p, 'Unidad') : addProduct(p, 'Caja')"
             >
               <div>
-<<<<<<< HEAD
-                <div class="fw-semibold" style="font-size: 0.875rem;">{{ p.nombre }}</div>
-                <small class="text-secondary">{{ p.codigo }} | Stock: <span :class="p.stock <= p.stockMinimo ? 'text-danger' : 'text-success'">{{ p.stock }}</span></small>
-              </div>
-              <div class="text-end">
-                <template v-if="getActiveDiscount(p) > 0">
-                  <span class="badge-promo-activa me-1">{{ getActiveDiscount(p) }}% DTO</span>
-                  <div class="fw-bold" style="color:var(--success); font-size:0.875rem;">Bs. {{ getDiscountedPrice(p).toFixed(2) }}</div>
-                  <small class="text-secondary text-decoration-line-through" style="font-size:0.72rem;">Bs. {{ Number(p.precioVenta).toFixed(2) }}</small>
-                </template>
-                <template v-else>
-                  <div class="fw-bold" style="color:var(--success); font-size:0.875rem;">Bs. {{ Number(p.precioVenta).toFixed(2) }}</div>
-                </template>
-                <div><button class="btn btn-sm mt-1" style="border:1px solid var(--border-color); color:var(--text-secondary); border-radius:6px;"><i class="bi bi-plus"></i></button></div>
-=======
                 <div class="fw-semibold" style="font-size: 0.875rem;">{{ p.nombre }} <span class="text-secondary fw-normal" style="font-size:0.75rem;">({{ p.unidadMedida || 'Unidad' }})</span></div>
-                <small class="text-secondary">{{ p.codigo }} | Stock: <span :class="p.stock <= p.stockMinimo ? 'text-danger' : 'text-success'">{{ p.stock }}</span></small>
+                <small class="text-secondary">{{ p.codigo }} | Stock: <span :class="p.stock <= p.stockMinimo ? 'text-danger' : 'text-success'">{{ formatStock(p.stock, p.unidadesPorCaja) }}</span></small>
               </div>
               <div class="text-end">
-                <div class="d-flex align-items-center justify-content-end gap-2 mb-1">
+                <div class="d-flex align-items-center justify-content-end gap-2 mb-1" v-if="p.vendePorUnidad !== false">
                   <div class="text-end">
                     <small class="text-secondary d-block" style="font-size:0.7rem; line-height:1;">Unidad</small>
                     <template v-if="getActiveDiscount(p) > 0">
@@ -129,20 +146,19 @@
                       <div class="fw-bold" style="color:var(--success); font-size:0.875rem;">Bs. {{ getDiscountedPrice(p).toFixed(2) }}</div>
                     </template>
                     <template v-else>
-                      <div class="fw-bold" style="color:var(--success); font-size:0.875rem;">Bs. {{ Number(p.precioVenta).toFixed(2) }}</div>
+                      <div class="fw-bold" style="color:var(--success); font-size:0.875rem;">Bs. {{ Number(p.precioVentaUnidad || p.precioVenta).toFixed(2) }}</div>
                     </template>
                   </div>
                   <button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--text-secondary); border-radius:6px; padding:2px 6px;" @click.stop="addProduct(p, 'Unidad')"><i class="bi bi-plus"></i></button>
                 </div>
                 
-                <div class="d-flex align-items-center justify-content-end gap-2" v-if="p.precioCaja">
+                <div class="d-flex align-items-center justify-content-end gap-2" v-if="p.vendePorCaja !== false && (p.precioVentaCaja || p.precioCaja)">
                   <div class="text-end">
-                    <small class="text-secondary d-block" style="font-size:0.7rem; line-height:1;">Caja ({{p.unidadesPorCaja}} un)</small>
-                    <div class="fw-bold" style="color:var(--primary-light); font-size:0.875rem;">Bs. {{ Number(p.precioCaja).toFixed(2) }}</div>
+                    <small class="text-secondary d-block" style="font-size:0.7rem; line-height:1;">Caja ({{p.unidadesPorCaja || 6}} un)</small>
+                    <div class="fw-bold" style="color:var(--primary-light); font-size:0.875rem;">Bs. {{ Number(p.precioVentaCaja || p.precioCaja || (Number(p.precioVentaUnidad || p.precioVenta) * (p.unidadesPorCaja || 6))).toFixed(2) }}</div>
                   </div>
                   <button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--primary-light); border-radius:6px; padding:2px 6px;" @click.stop="addProduct(p, 'Caja')"><i class="bi bi-plus"></i></button>
                 </div>
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
               </div>
             </div>
             <div v-if="filteredProducts.length === 0" class="text-center text-secondary py-4" style="font-size:0.875rem;">
@@ -165,14 +181,6 @@
 
           <div v-for="(item, i) in cart" :key="i" class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid rgba(212,175,55,0.08);">
             <div style="flex:1; min-width:0;">
-<<<<<<< HEAD
-              <div class="fw-semibold text-truncate" style="font-size:0.85rem;">{{ item.nombre }}</div>
-              <div class="d-flex align-items-center gap-2 mt-1">
-                <button class="btn btn-sm" style="padding:1px 7px; border:1px solid var(--border-color); border-radius:5px; color:var(--text-secondary);" @click="item.cantidad > 1 ? item.cantidad-- : removeItem(i)">-</button>
-                <span style="font-size:0.85rem; min-width:20px; text-align:center;">{{ item.cantidad }}</span>
-                <button class="btn btn-sm" style="padding:1px 7px; border:1px solid var(--border-color); border-radius:5px; color:var(--text-secondary);" @click="item.cantidad++">+</button>
-                <span class="text-secondary" style="font-size:0.78rem;">× Bs. {{ Number(item.precio).toFixed(2) }}</span>
-=======
               <div class="fw-semibold text-truncate" style="font-size:0.85rem;">{{ item.nombre }} <span class="text-secondary fw-normal" style="font-size:0.75rem;">({{ item.tipoVenta }})</span></div>
               <div class="d-flex align-items-center gap-2 mt-1">
                 <button class="btn btn-sm" style="padding:1px 7px; border:1px solid var(--border-color); border-radius:5px; color:var(--text-secondary);" @click="item.cantidad > 1 ? item.cantidad-- : removeItem(i)">-</button>
@@ -180,7 +188,6 @@
                 <button class="btn btn-sm" style="padding:1px 7px; border:1px solid var(--border-color); border-radius:5px; color:var(--text-secondary);" @click="increaseQty(i)">+</button>
                 <span class="text-secondary" style="font-size:0.78rem;">× Bs. {{ Number(item.precio).toFixed(2) }}</span>
                 <span class="text-secondary" style="font-size:0.7rem;" v-if="item.tipoVenta === 'Caja'">(Bs. {{ (Number(item.precio) / item.factorUnidades).toFixed(2) }} c/u)</span>
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
               </div>
             </div>
             <div class="text-end ms-2">
@@ -197,8 +204,6 @@
               <span class="fw-bold" style="font-size:1.4rem; color:var(--primary); font-family:'Outfit',sans-serif;">Bs. {{ total.toFixed(2) }}</span>
             </div>
 
-<<<<<<< HEAD
-=======
             <!-- Pago / Cambio -->
             <div class="row mb-3">
               <div class="col-6">
@@ -216,7 +221,6 @@
               </div>
             </div>
 
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
             <!-- Método de Pago -->
             <div class="mb-3">
               <label class="form-label">Método de Pago</label>
@@ -225,8 +229,17 @@
               </select>
             </div>
 
+            <!-- QR placard presentation -->
+            <div v-if="isQrSelected" class="mb-3 p-3 rounded text-center animate-fade-in" style="background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.15);">
+              <label class="form-label text-gold d-block fw-bold mb-2">Escanea el QR para Pagar</label>
+              <div class="bg-white p-2 rounded d-inline-block shadow-sm" style="max-width:180px;">
+                <img :src="staticQrUrl" class="w-100 rounded" style="max-height: 160px; object-fit: contain;" alt="QR de Pago" />
+              </div>
+              <p class="text-secondary small mt-2 mb-0">Monto exacto a transferir: <strong class="text-gold">Bs. {{ total.toFixed(2) }}</strong></p>
+            </div>
+
             <!-- Comprobante QR (upload) -->
-            <div class="mb-3">
+            <div v-if="isQrSelected" class="mb-3 animate-fade-in">
               <label class="form-label">Comprobante QR <span class="text-secondary" style="font-size:0.7rem; text-transform:none;">(opcional)</span></label>
               <div
                 class="d-flex flex-column align-items-center justify-content-center p-3 rounded"
@@ -238,7 +251,7 @@
               >
                 <div v-if="!qrFile" class="text-center">
                   <i class="bi bi-qr-code-scan text-secondary" style="font-size:1.5rem;"></i>
-                  <p class="text-secondary mb-0 mt-1" style="font-size:0.78rem;">Arrastre o haga clic para subir imagen QR</p>
+                  <p class="text-secondary mb-0 mt-1" style="font-size:0.78rem;">Arrastre o haga clic para subir captura de pago</p>
                   <small class="text-secondary" style="font-size:0.68rem;">JPG, PNG, WEBP (máx 5MB)</small>
                 </div>
                 <div v-else class="d-flex align-items-center gap-2">
@@ -340,23 +353,39 @@ const clienteId = ref<number | null>(null)
 const hoveredCliente = ref<number | null>(null)
 
 // Cart
-<<<<<<< HEAD
-const cart = ref<{ productoId: number; nombre: string; cantidad: number; precio: number }[]>([])
-const metodoPagoId = ref<number | null>(null)
-
-=======
 const cart = ref<{ productoId: number; nombre: string; cantidad: number; precio: number; unidadMedida: string; tipoVenta: string; factorUnidades: number; stock: number }[]>([])
 const metodoPagoId = ref<number | null>(null)
 
-const direccionEntrega = ref('')
+const tipoEntrega = ref('Tienda')
+const direccion = ref('')
+const referencia = ref('')
+const telefonoContacto = ref('')
+const costoDelivery = ref(10.00)
 const montoRecibido = ref<number | ''>('')
 
 
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
 // QR
 const qrInput = ref<HTMLInputElement | null>(null)
 const qrFile = ref<File | null>(null)
 const qrPreview = ref<string>('')
+const staticQrUrl = ref('/qr/default-qr.png')
+
+const isQrSelected = computed(() => {
+  const selected = metodosPago.value.find(m => m.id === metodoPagoId.value)
+  return selected?.nombre?.toUpperCase() === 'QR'
+})
+
+async function loadStaticQrConfig() {
+  try {
+    const res = await fetch('/qr/config.json?t=' + Date.now())
+    if (res.ok) {
+      const data = await res.json()
+      staticQrUrl.value = data.qrUrl || '/qr/default-qr.png'
+    }
+  } catch (e) {
+    console.error('Error al cargar QR estático', e)
+  }
+}
 
 function triggerQrInput() {
   qrInput.value?.click()
@@ -428,21 +457,13 @@ const filteredProducts = computed(() =>
   )
 )
 
-const total = computed(() => cart.value.reduce((s, i) => s + i.cantidad * i.precio, 0))
-<<<<<<< HEAD
-
-onMounted(async () => {
-  const [p, m] = await Promise.all([http.get('productos'), http.get('metodos-pago')])
-  productos.value = p.data
-  metodosPago.value = m.data
-  if (metodosPago.value.length) metodoPagoId.value = metodosPago.value[0].id
-
-  if (modalClienteRef.value) {
-    modalCliente = new Modal(modalClienteRef.value)
+const total = computed(() => {
+  const baseTotal = cart.value.reduce((s, i) => s + i.cantidad * i.precio, 0)
+  if (tipoEntrega.value === 'Delivery') {
+    return baseTotal + (Number(costoDelivery.value) || 0)
   }
+  return baseTotal
 })
-
-=======
 const cambio = computed(() => {
   const recibido = Number(montoRecibido.value) || 0
   if (recibido === 0) return 0
@@ -455,12 +476,13 @@ onMounted(async () => {
   metodosPago.value = m.data
   if (metodosPago.value.length) metodoPagoId.value = metodosPago.value[0].id
 
+  await loadStaticQrConfig()
+
   if (modalClienteRef.value) {
     modalCliente = new Modal(modalClienteRef.value)
   }
 })
 
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
 // Cliente search
 let searchTimeout: ReturnType<typeof setTimeout>
 async function buscarCliente() {
@@ -499,21 +521,29 @@ function getActiveDiscount(p: any): number {
 
 function getDiscountedPrice(p: any): number {
   const d = getActiveDiscount(p)
-  return d > 0 ? Number(p.precioVenta) * (1 - d / 100) : Number(p.precioVenta)
+  const basePrice = Number(p.precioVentaUnidad || p.precioVenta || 0)
+  return d > 0 ? basePrice * (1 - d / 100) : basePrice
+}
+
+function formatStock(stock: number, unidadesPorCaja: number) {
+  const totalUnits = Number(stock || 0);
+  const factor = Number(unidadesPorCaja || 6);
+  const cajas = Math.floor(totalUnits / factor);
+  const residuo = totalUnits % factor;
+  
+  if (cajas > 0 && residuo > 0) {
+    return `${totalUnits} u (${cajas} c y ${residuo} u)`;
+  } else if (cajas > 0) {
+    return `${totalUnits} u (${cajas} c)`;
+  } else {
+    return `${totalUnits} u`;
+  }
 }
 
 // Cart
-<<<<<<< HEAD
-function addProduct(p: any) {
-  const existing = cart.value.find(i => i.productoId === p.id)
-  if (existing) {
-    existing.cantidad++
-  } else {
-    cart.value.push({ productoId: p.id, nombre: p.nombre, cantidad: 1, precio: getDiscountedPrice(p) })
-=======
 function addProduct(p: any, tipoVenta: string = 'Unidad') {
   const existing = cart.value.find(i => i.productoId === p.id && i.tipoVenta === tipoVenta)
-  const factor = tipoVenta === 'Caja' ? (p.unidadesPorCaja || 1) : 1
+  const factor = tipoVenta === 'Caja' ? (p.unidadesPorCaja || 6) : 1
   
   const currentTotalInCart = cart.value.filter(i => i.productoId === p.id).reduce((s, i) => s + (i.cantidad * i.factorUnidades), 0)
 
@@ -528,7 +558,8 @@ function addProduct(p: any, tipoVenta: string = 'Unidad') {
     let precio = getDiscountedPrice(p)
     if (tipoVenta === 'Caja') {
        const discount = getActiveDiscount(p)
-       precio = discount > 0 ? Number(p.precioCaja) * (1 - discount / 100) : Number(p.precioCaja)
+       const baseCaja = Number(p.precioVentaCaja || p.precioCaja || (Number(p.precioVentaUnidad || p.precioVenta) * (p.unidadesPorCaja || 6)))
+       precio = discount > 0 ? baseCaja * (1 - discount / 100) : baseCaja
     }
 
     cart.value.push({ 
@@ -541,14 +572,11 @@ function addProduct(p: any, tipoVenta: string = 'Unidad') {
       factorUnidades: factor,
       stock: p.stock
     })
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
   }
 }
 
 function removeItem(i: number) { cart.value.splice(i, 1) }
 
-<<<<<<< HEAD
-=======
 function increaseQty(idx: number) {
   const item = cart.value[idx]
   const currentTotalInCart = cart.value.filter(i => i.productoId === item.productoId).reduce((s, i) => s + (i.cantidad * i.factorUnidades), 0)
@@ -560,7 +588,6 @@ function increaseQty(idx: number) {
   }
 }
 
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
 // QR
 function onQrSelect(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
@@ -586,6 +613,15 @@ function clearQr() {
 async function registrarVenta() {
   if (!cart.value.length) return
   processing.value = true
+  
+  if (tipoEntrega.value === 'Delivery') {
+    if (!direccion.value.trim() || !telefonoContacto.value.trim()) {
+      Swal.fire({ icon: 'warning', title: 'Campos requeridos', text: 'Para envíos por delivery, la dirección y el teléfono de contacto son obligatorios.' })
+      processing.value = false
+      return
+    }
+  }
+
   try {
     let comprobanteQr: string | undefined = undefined
 
@@ -603,39 +639,35 @@ async function registrarVenta() {
       clienteId: sinCliente.value ? undefined : (clienteId.value || undefined),
       usuarioId: authStore.user?.id,
       comprobanteQr,
-<<<<<<< HEAD
-      detalles: cart.value.map(i => ({ productoId: i.productoId, cantidad: i.cantidad, precio: i.precio })),
-      pagos: [{ metodoPagoId: metodoPagoId.value, monto: total.value }],
-=======
-      direccionEntrega: direccionEntrega.value.trim() || undefined,
+      tipoEntrega: tipoEntrega.value,
+      direccion: tipoEntrega.value === 'Delivery' ? direccion.value.trim() : undefined,
+      referencia: tipoEntrega.value === 'Delivery' ? referencia.value.trim() : undefined,
+      telefonoContacto: tipoEntrega.value === 'Delivery' ? telefonoContacto.value.trim() : undefined,
+      costoDelivery: tipoEntrega.value === 'Delivery' ? Number(costoDelivery.value) || 0 : undefined,
       detalles: cart.value.map(i => ({ productoId: i.productoId, cantidad: i.cantidad, precio: i.precio, tipoVenta: i.tipoVenta })),
       pagos: [{ metodoPagoId: metodoPagoId.value, monto: total.value, montoRecibido: Number(montoRecibido.value) || total.value, cambio: cambio.value > 0 ? cambio.value : 0 }],
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
     })
 
     await Swal.fire({
       icon: 'success',
       title: '¡Venta registrada!',
-<<<<<<< HEAD
-      html: `<strong>Total: Bs. ${total.value.toFixed(2)}</strong>${sinCliente.value ? '<br><small>Registrada como Consumidor Final</small>' : ''}`,
-=======
-      html: `<strong>Total: Bs. ${total.value.toFixed(2)}</strong>${sinCliente.value ? '<br><small>Registrada como Consumidor Final</small>' : ''}${Number(montoRecibido.value) > 0 ? `<br><small>Cambio devuelto: Bs. ${cambio.value.toFixed(2)}</small>` : ''}`,
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
+      html: `<strong>Total: Bs. ${total.value.toFixed(2)}</strong>${sinCliente.value ? '<br><small>Registrada como Cliente Ocasional</small>' : ''}${Number(montoRecibido.value) > 0 ? `<br><small>Cambio devuelto: Bs. ${cambio.value.toFixed(2)}</small>` : ''}`,
       timer: 2500,
       showConfirmButton: false,
     })
 
-<<<<<<< HEAD
-=======
     // Reset values
     cart.value = []
     sinCliente.value = false
     limpiarCliente()
-    direccionEntrega.value = ''
+    tipoEntrega.value = 'Tienda'
+    direccion.value = ''
+    referencia.value = ''
+    telefonoContacto.value = ''
+    costoDelivery.value = 10.00
     montoRecibido.value = ''
     clearQr()
 
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
     const backPath = authStore.user?.rol?.nombre === 'VENDEDOR' ? '/vendedor/ventas' : '/admin/ventas'
     router.push(backPath)
   } catch (e: any) {

@@ -2,6 +2,9 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
@@ -39,4 +42,16 @@ export class DetalleVenta {
 
   @Column({ name: 'producto_id' })
   productoId: number;
+
+  @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
+  fechaCreacion: Date;
+
+  @UpdateDateColumn({ name: 'fecha_modificacion', type: 'timestamp' })
+  fechaModificacion: Date;
+
+  @DeleteDateColumn({ name: 'fecha_eliminacion', type: 'timestamp' })
+  fechaEliminacion: Date;
+
+  @Column({ name: 'con_hielo', type: 'boolean', default: false, nullable: true })
+  conHielo: boolean;
 }

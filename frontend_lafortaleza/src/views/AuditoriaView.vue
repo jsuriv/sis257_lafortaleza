@@ -83,7 +83,7 @@
           </thead>
           <tbody>
             <tr v-for="log in paginatedLogs" :key="log.id">
-              <td class="text-nowrap">{{ formatDate(log.fecha) }}</td>
+              <td class="text-nowrap">{{ formatDate(log.fechaCreacion) }}</td>
               <td class="fw-semibold text-light">
                 <i class="bi bi-person-badge text-gold me-2"></i>{{ log.usuarioNombre }}
               </td>
@@ -145,7 +145,7 @@ import http from '@/plugins/axios'
 
 interface AuditLog {
   id: number
-  fecha: string
+  fechaCreacion: string
   usuarioNombre: string
   accion: 'CREAR' | 'EDITAR' | 'ELIMINAR'
   tabla: 'VENTAS' | 'CLIENTES'

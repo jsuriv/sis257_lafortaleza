@@ -44,6 +44,9 @@ const router = createRouter({
         { path: 'configuracion', name: 'admin-configuracion', component: () => import('@/views/ConfiguracionView.vue') },
         { path: 'auditoria', name: 'admin-auditoria', component: () => import('@/views/AuditoriaView.vue') },
         { path: 'promociones', name: 'admin-promociones', component: () => import('@/views/PromocionesView.vue') },
+        { path: 'caja', name: 'admin-caja', component: () => import('@/views/CajaView.vue') },
+        { path: 'delivery', name: 'admin-delivery', component: () => import('@/views/DeliveryTrackingView.vue') },
+        { path: 'combos', name: 'admin-combos', component: () => import('@/views/CombosView.vue') },
       ],
     },
     {
@@ -57,6 +60,8 @@ const router = createRouter({
         { path: 'clientes', name: 'vendedor-clientes', component: () => import('@/views/ClientesView.vue') },
         { path: 'productos', name: 'vendedor-productos', component: () => import('@/views/ProductosView.vue') },
         { path: 'perfil', name: 'vendedor-perfil', component: () => import('@/views/PerfilView.vue') },
+        { path: 'caja', name: 'vendedor-caja', component: () => import('@/views/CajaView.vue') },
+        { path: 'delivery', name: 'vendedor-delivery', component: () => import('@/views/DeliveryTrackingView.vue') },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },

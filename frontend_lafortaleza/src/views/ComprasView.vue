@@ -30,8 +30,8 @@
           <div class="col-md-4"><small class="text-secondary">Total:</small><br/><strong style="color: var(--info); font-size: 1.2rem;">Bs. {{ Number(selectedCompra.total).toFixed(2) }}</strong></div>
         </div>
         <table class="table table-sm" style="color: var(--text-primary);">
-          <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead>
-          <tbody><tr v-for="d in selectedCompra.detalles" :key="d.id"><td>{{ d.producto?.nombre }}</td><td>{{ d.cantidad }}</td><td>Bs. {{ Number(d.precio).toFixed(2) }}</td><td>Bs. {{ Number(d.subtotal).toFixed(2) }}</td></tr></tbody>
+          <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio Unitario</th><th>Subtotal</th></tr></thead>
+          <tbody><tr v-for="d in selectedCompra.detalles" :key="d.id"><td>{{ d.producto?.nombre }}</td><td>{{ formatQuantityAndUnits(d.cantidad, d.producto?.unidadesPorCaja) }}</td><td>Bs. {{ Number(d.precio).toFixed(2) }}</td><td>Bs. {{ Number(d.subtotal).toFixed(2) }}</td></tr></tbody>
         </table>
       </div>
     </div></div></div>
@@ -45,4 +45,18 @@ import { Modal } from 'bootstrap'
 const items = ref<any[]>([]); const selectedCompra = ref<any>(null); const detailModalRef = ref<HTMLElement>(); let detailModal: Modal
 onMounted(async () => { detailModal = new Modal(detailModalRef.value!); items.value = (await http.get('compras')).data })
 function showDetail(c: any) { selectedCompra.value = c; detailModal.show() }
+
+function formatQuantityAndUnits(cantidad: number, unidadesPorCaja?: number) {
+  const units = Number(cantidad || 0);
+  const factor = Number(unidadesPorCaja || 6);
+  const cajas = Math.floor(units / factor);
+  const residuo = units % factor;
+  if (cajas > 0 && residuo > 0) {
+    return `${units} u (${cajas} c y ${residuo} u)`;
+  } else if (cajas > 0) {
+    return `${units} u (${cajas} c)`;
+  } else {
+    return `${units} u`;
+  }
+}
 </script>

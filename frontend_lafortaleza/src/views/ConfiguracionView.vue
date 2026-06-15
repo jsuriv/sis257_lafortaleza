@@ -61,9 +61,46 @@
               @change="onFileSelected"
             />
             <button class="btn btn-primary-custom" @click="triggerFileInput">
-              <i class="bi bi-upload me-1"></i> Subir Video de Fondo
+              <i class="bi bi-upload me-1"></i> Subir Video
             </button>
             <button v-if="currentVideoUrl && currentVideoUrl !== '/video/hero.mp4'" class="btn btn-outline-danger" @click="restoreDefault">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Restablecer Predeterminado
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Static QR placard manager -->
+      <div class="col-md-6">
+        <div class="glass-card p-4 h-100">
+          <h5 class="text-gold fw-bold mb-3 border-bottom border-gold-trans pb-2"><i class="bi bi-qr-code me-2"></i>Código QR Estático para Pagos</h5>
+          <p class="text-secondary mb-3" style="font-size: 0.88rem;">
+            Sube o reemplaza el código QR de cobros de la licorería. Este QR se mostrará a los vendedores y clientes al seleccionar pago por QR.
+          </p>
+
+          <div class="mb-4">
+            <label class="form-label d-block fw-semibold mb-2">Código QR Actual:</label>
+            <div v-if="currentQrUrl" class="text-center border border-secondary-subtle rounded p-2 bg-dark bg-opacity-10" style="max-width: 200px; margin: 0 auto;">
+              <img :src="currentQrUrl" class="w-100 rounded" style="max-height: 180px; object-fit: contain;" alt="QR de Pago" />
+              <small class="text-secondary d-block mt-2 text-truncate" style="font-size: 0.75rem;">{{ currentQrUrl }}</small>
+            </div>
+            <div v-else class="text-center py-4 text-secondary border border-secondary-subtle rounded bg-dark bg-opacity-10">
+              Cargando QR actual...
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <input 
+              type="file" 
+              ref="qrFileInputRef" 
+              class="d-none" 
+              accept="image/png,image/jpeg,image/jpg,image/webp" 
+              @change="onQrFileSelected"
+            />
+            <button class="btn btn-primary-custom" @click="triggerQrFileInput">
+              <i class="bi bi-upload me-1"></i> Subir Código QR
+            </button>
+            <button v-if="currentQrUrl && currentQrUrl !== '/qr/default-qr.png'" class="btn btn-outline-danger" @click="restoreDefaultQr">
               <i class="bi bi-arrow-counterclockwise me-1"></i> Restablecer Predeterminado
             </button>
           </div>
@@ -81,8 +118,12 @@ import Swal from 'sweetalert2'
 const currentVideoUrl = ref('')
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
+const currentQrUrl = ref('')
+const qrFileInputRef = ref<HTMLInputElement | null>(null)
+
 onMounted(async () => {
   await loadVideoConfig()
+  await loadQrConfig()
 })
 
 async function loadVideoConfig() {
@@ -100,8 +141,27 @@ async function loadVideoConfig() {
   }
 }
 
+async function loadQrConfig() {
+  try {
+    const res = await fetch('/qr/config.json?t=' + Date.now())
+    if (res.ok) {
+      const data = await res.json()
+      currentQrUrl.value = data.qrUrl || '/qr/default-qr.png'
+    } else {
+      currentQrUrl.value = '/qr/default-qr.png'
+    }
+  } catch (e) {
+    console.error('Error al cargar config de QR', e)
+    currentQrUrl.value = '/qr/default-qr.png'
+  }
+}
+
 function triggerFileInput() {
   fileInputRef.value?.click()
+}
+
+function triggerQrFileInput() {
+  qrFileInputRef.value?.click()
 }
 
 async function onFileSelected(event: Event) {
@@ -158,6 +218,60 @@ async function onFileSelected(event: Event) {
   }
 }
 
+async function onQrFileSelected(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    const file = target.files[0]
+    
+    // Only accept image files
+    if (!file.type.startsWith('image/')) {
+      return Swal.fire({
+        icon: 'warning',
+        title: 'Archivo no admitido',
+        text: 'Por favor selecciona un archivo de imagen válido (.png, .jpg, .jpeg, .webp)'
+      })
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      Swal.fire({
+        title: 'Subiendo QR...',
+        text: 'Esto puede tomar unos segundos.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        }
+      })
+
+      const res = await http.post('productos/upload-qr', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      currentQrUrl.value = res.data.url
+      Swal.fire({
+        icon: 'success',
+        title: 'Código QR actualizado',
+        text: 'El código QR de cobros se actualizó exitosamente.',
+        timer: 2000,
+        showConfirmButton: false
+      })
+    } catch (e: any) {
+      console.error(e)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al subir',
+        text: e.response?.data?.message || 'Hubo un error al guardar el QR en el servidor.'
+      })
+    } finally {
+      target.value = ''
+    }
+  }
+}
+
 async function restoreDefault() {
   const r = await Swal.fire({
     title: '¿Restablecer predeterminado?',
@@ -193,6 +307,46 @@ async function restoreDefault() {
         icon: 'error',
         title: 'Error',
         text: e.response?.data?.message || 'Hubo un error al restablecer el video.'
+      })
+    }
+  }
+}
+
+async function restoreDefaultQr() {
+  const r = await Swal.fire({
+    title: '¿Restablecer predeterminado?',
+    text: 'Se volverá a mostrar el código QR original de la licorería.',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, restablecer',
+    cancelButtonText: 'Cancelar'
+  })
+
+  if (r.isConfirmed) {
+    try {
+      Swal.fire({
+        title: 'Restableciendo...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        }
+      })
+
+      const res = await http.post('productos/restore-qr')
+      currentQrUrl.value = res.data.url
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'QR restablecido',
+        timer: 1500,
+        showConfirmButton: false
+      })
+    } catch (e: any) {
+      console.error(e)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: e.response?.data?.message || 'Hubo un error al restablecer el QR.'
       })
     }
   }

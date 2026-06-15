@@ -9,10 +9,11 @@ import { Proveedor } from '../proveedores/entities/proveedor.entity';
 import { Cliente } from '../clientes/entities/cliente.entity';
 import { Producto } from '../productos/entities/producto.entity';
 import { MetodoPago } from '../metodos-pago/entities/metodo-pago.entity';
+import { ComboProducto } from '../productos/entities/combo-producto.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Rol, Usuario, Categoria, Marca, Proveedor, Cliente, Producto, MetodoPago]),
+    TypeOrmModule.forFeature([Rol, Usuario, Categoria, Marca, Proveedor, Cliente, Producto, MetodoPago, ComboProducto]),
   ],
   providers: [SeederService],
 })

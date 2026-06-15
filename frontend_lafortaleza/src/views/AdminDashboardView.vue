@@ -108,56 +108,98 @@
         </div>
       </div>
 
-      <!-- Second Row: Dynamic SVG Spline Chart (Ventas Mensuales) & Categories -->
+      <!-- Second Row: Monthly Sales and Delivery vs Tienda -->
       <div class="row g-4 mb-4">
-        <!-- Cinematic Spline Chart -->
+        <!-- Monthly Sales Chart -->
         <div class="col-lg-8">
           <div class="glass-card p-4 h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="text-gold fw-bold mb-0 font-title"><i class="bi bi-activity me-2"></i>Historial de Ventas Mensuales</h5>
-              <span class="badge bg-gold-trans text-gold">Tendencia Anual</span>
+              <span class="badge bg-gold-trans text-gold">Tendencia Mensual</span>
             </div>
-            
-            <div class="chart-container-svg">
-              <svg viewBox="0 0 600 220" class="svg-chart">
-                <defs>
-                  <linearGradient id="chart-area-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#D4AF37" stop-opacity="0.3"/>
-                    <stop offset="100%" stop-color="#D4AF37" stop-opacity="0.0"/>
-                  </linearGradient>
-                </defs>
-                <!-- Grid Lines -->
-                <line v-for="y in [40, 90, 140, 190]" :key="y" x1="40" :y1="y" x2="580" :y2="y" stroke="rgba(0,0,0,0.05)" stroke-dasharray="4" />
-                
-                <!-- Spline Gradient Area -->
-                <path :d="splineAreaD" fill="url(#chart-area-grad)" />
-                
-                <!-- Spline Line -->
-                <path :d="splineLineD" fill="none" stroke="#D4AF37" stroke-width="4" stroke-linecap="round" />
-                
-                <!-- Interaction dots -->
-                <g v-for="(p, index) in chartPoints" :key="'pt-'+index" class="chart-point-group" @mouseenter="hoverPoint = index" @mouseleave="hoverPoint = null">
-                  <circle :cx="p.x" :cy="p.y" r="6" fill="#D4AF37" stroke="#ffffff" stroke-width="2" />
-                  <circle :cx="p.x" :cy="p.y" r="14" fill="rgba(212, 175, 55, 0.15)" class="chart-point-ripple" />
-                  <!-- Hover tooltip -->
-                  <foreignObject v-if="hoverPoint === index" :x="p.x - 55" :y="p.y - 45" width="110" height="40" class="foreign-object-tooltip">
-                    <div class="chart-tooltip">
-                      {{ p.label }}: Bs.{{ p.val }}
-                    </div>
-                  </foreignObject>
-                </g>
-              </svg>
-            </div>
-            
-            <!-- X-axis Labels -->
-            <div class="d-flex justify-content-between text-secondary px-4 mt-2" style="font-size: 0.78rem; font-weight: 500;">
-              <span v-for="p in chartPoints" :key="p.label">{{ p.label }}</span>
+            <div style="position: relative; height: 260px; width: 100%;">
+              <canvas ref="salesChartCanvas"></canvas>
             </div>
           </div>
         </div>
 
-        <!-- Popular Products Progress Card -->
+        <!-- Tienda vs Delivery Chart -->
         <div class="col-lg-4">
+          <div class="glass-card p-4 h-100">
+            <h5 class="text-gold fw-bold mb-3 border-bottom pb-2 border-gold-trans font-title">
+              <i class="bi bi-truck me-2"></i>Tienda vs Delivery
+            </h5>
+            <div style="position: relative; height: 220px; width: 100%;">
+              <canvas ref="deliveryChartCanvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Third Row: Payment Methods & Critical Stock Alert -->
+      <div class="row g-4 mb-4">
+        <!-- Payment Methods Chart -->
+        <div class="col-lg-4">
+          <div class="glass-card p-4 h-100">
+            <h5 class="text-gold fw-bold mb-3 border-bottom pb-2 border-gold-trans font-title">
+              <i class="bi bi-credit-card-fill me-2"></i>Métodos de Pago
+            </h5>
+            <div style="position: relative; height: 220px; width: 100%;">
+              <canvas ref="paymentsChartCanvas"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Critical Stock Alert List -->
+        <div class="col-lg-8">
+          <div class="glass-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2 border-gold-trans">
+              <h5 class="text-gold fw-bold mb-0 font-title">
+                <i class="bi bi-exclamation-octagon-fill me-2 text-danger animate-pulse-fast"></i>Alertas de Stock Crítico
+              </h5>
+              <span class="badge bg-danger bg-opacity-25 text-danger">{{ lowStockCount }} Productos</span>
+            </div>
+            <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+              <table class="table table-hover table-dark mb-0 align-middle text-start" style="--bs-table-bg: transparent; border-color: rgba(255, 255, 255, 0.05);">
+                <thead>
+                  <tr class="text-secondary" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Stock Act.</th>
+                    <th>Stock Mín.</th>
+                    <th>Precio</th>
+                  </tr>
+                </thead>
+                <tbody style="font-size: 0.85rem;">
+                  <tr v-for="p in productosBajoStock" :key="p.id">
+                    <td><code>{{ p.codigo }}</code></td>
+                    <td class="fw-semibold text-light">{{ p.nombre }}</td>
+                    <td class="text-secondary">{{ p.categoria?.nombre || 'General' }}</td>
+                    <td>
+                      <span class="badge bg-danger bg-opacity-20 text-danger fw-bold px-2 py-1">
+                        {{ formatStock(p.stock, p.unidadesPorCaja) }}
+                      </span>
+                    </td>
+                    <td class="text-secondary">{{ formatStock(p.stockMinimo, p.unidadesPorCaja) }}</td>
+                    <td class="fw-bold text-gold">Bs. {{ Number(p.precioVentaUnidad || p.precioVenta).toFixed(2) }}</td>
+                  </tr>
+                  <tr v-if="productosBajoStock.length === 0">
+                    <td colspan="6" class="text-center text-secondary py-4">
+                      <i class="bi bi-check-circle-fill text-success me-2"></i>¡Todo el inventario tiene stock suficiente!
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fourth Row: Popular Products & Quick Actions -->
+      <div class="row g-4 mb-4">
+        <!-- Popular Products -->
+        <div class="col-lg-6">
           <div class="glass-card p-4 h-100">
             <h5 class="text-gold fw-bold mb-3 border-bottom pb-2 border-gold-trans font-title">
               <i class="bi bi-star-fill me-2"></i>Productos Más Vendidos
@@ -178,70 +220,56 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Third Row: Quick Actions, Recent Clients & Logs -->
-      <div class="row g-4 mb-4">
-        <!-- Exec Grid Shortcuts -->
-        <div class="col-lg-7">
+        <!-- Exec Grid Shortcuts & Recent Clients -->
+        <div class="col-lg-6">
           <div class="glass-card p-4 h-100">
             <h5 class="text-gold fw-bold mb-3 border-bottom pb-2 border-gold-trans font-title">
               <i class="bi bi-sliders me-2"></i>Controles del Centro de Negocio
             </h5>
-            <div class="row g-3">
-              <div class="col-sm-6">
+            <div class="row g-3 mb-3">
+              <div class="col-6">
                 <router-link to="/admin/productos" class="shortcut-card bg-glass text-decoration-none">
-                  <i class="bi bi-beer text-gold mb-2 fs-3"></i>
-                  <span class="title">Administrar Licores</span>
-                  <span class="subtitle">Inventario y catálogo</span>
+                  <i class="bi bi-beer text-gold mb-1 fs-4"></i>
+                  <span class="title" style="font-size: 0.8rem;">Licores</span>
                 </router-link>
               </div>
-              <div class="col-sm-6">
-                <router-link to="/admin/categorias" class="shortcut-card bg-glass text-decoration-none">
-                  <i class="bi bi-tags-fill text-gold mb-2 fs-3"></i>
-                  <span class="title">Categorías</span>
-                  <span class="subtitle">Clasificaciones</span>
+              <div class="col-6">
+                <router-link to="/admin/combos" class="shortcut-card bg-glass text-decoration-none">
+                  <i class="bi bi-boxes text-gold mb-1 fs-4"></i>
+                  <span class="title" style="font-size: 0.8rem;">Combos</span>
                 </router-link>
               </div>
-              <div class="col-sm-6">
-                <router-link to="/admin/compras/nueva" class="shortcut-card bg-glass text-decoration-none border-info-subtle">
-                  <i class="bi bi-bag-plus text-info mb-2 fs-3"></i>
-                  <span class="title">Comprar Stock</span>
-                  <span class="subtitle">Ingreso de proveedores</span>
+              <div class="col-6">
+                <router-link to="/admin/compras/nueva" class="shortcut-card bg-glass text-decoration-none">
+                  <i class="bi bi-bag-plus text-info mb-1 fs-4"></i>
+                  <span class="title" style="font-size: 0.8rem;">Comprar Stock</span>
                 </router-link>
               </div>
-              <div class="col-sm-6">
-                <router-link to="/admin/auditoria" class="shortcut-card bg-glass text-decoration-none border-warning-subtle">
-                  <i class="bi bi-journal-text text-warning mb-2 fs-3"></i>
-                  <span class="title">Bitácora de Auditoría</span>
-                  <span class="subtitle">Monitorear operaciones</span>
+              <div class="col-6">
+                <router-link to="/admin/caja" class="shortcut-card bg-glass text-decoration-none">
+                  <i class="bi bi-cash-coin text-success mb-1 fs-4"></i>
+                  <span class="title" style="font-size: 0.8rem;">Caja (Arqueo)</span>
                 </router-link>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Recent Clients Card -->
-        <div class="col-lg-5">
-          <div class="glass-card p-4 h-100">
-            <h5 class="text-gold fw-bold mb-3 border-bottom pb-2 border-gold-trans font-title">
-              <i class="bi bi-people-fill me-2"></i>Clientes Nuevos
-            </h5>
-            <div class="clients-list">
-              <div v-for="c in recentClients" :key="c.id" class="d-flex align-items-center justify-content-between py-2 border-bottom border-gold-trans">
+            <!-- New Clients Sub-list -->
+            <div class="clients-list border-top pt-3 border-gold-trans">
+              <h6 class="text-secondary text-uppercase fw-bold mb-2" style="font-size: 0.75rem; letter-spacing: 1px;">
+                Clientes Recientes
+              </h6>
+              <div v-for="c in recentClients" :key="c.id" class="d-flex align-items-center justify-content-between py-1 border-bottom border-gold-trans">
                 <div class="d-flex align-items-center gap-2">
                   <div class="avatar-small">
-                    <i class="bi bi-person-fill text-gold"></i>
+                    <i class="bi bi-person-fill text-gold" style="font-size: 0.8rem;"></i>
                   </div>
                   <div>
-                    <div class="fw-semibold text-light" style="font-size: 0.85rem;">{{ c.nombre }} {{ c.apellido }}</div>
-                    <small class="text-secondary" style="font-size: 0.72rem;">NIT: {{ c.ciNit || 'Sin NIT' }}</small>
+                    <div class="fw-semibold text-light" style="font-size: 0.8rem;">{{ c.nombre }} {{ c.apellido }}</div>
+                    <small class="text-secondary" style="font-size: 0.65rem;">NIT/CI: {{ c.ciNit || 'Sin NIT' }}</small>
                   </div>
                 </div>
-                <span class="text-secondary" style="font-size: 0.75rem;">{{ formatTime(c.fechaCreacion) }}</span>
-              </div>
-              <div v-if="recentClients.length === 0" class="text-center text-secondary py-5">
-                No hay clientes registrados.
+                <span class="text-secondary" style="font-size: 0.7rem;">{{ formatTime(c.fechaCreacion) }}</span>
               </div>
             </div>
           </div>
@@ -252,15 +280,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import http from '@/plugins/axios'
+import Chart from 'chart.js/auto'
 
 const loading = ref(true)
 const products = ref<any[]>([])
 const sales = ref<any[]>([])
 const clients = ref<any[]>([])
 const productosBajoStock = ref<any[]>([])
-const hoverPoint = ref<number | null>(null)
+
+// Chart.js Canvas Template References
+const salesChartCanvas = ref<HTMLCanvasElement | null>(null)
+const deliveryChartCanvas = ref<HTMLCanvasElement | null>(null)
+const paymentsChartCanvas = ref<HTMLCanvasElement | null>(null)
+
+let salesChart: any = null
+let deliveryChart: any = null
+let paymentsChart: any = null
 
 const currentTime = ref('')
 let timerInterval: any = null
@@ -295,58 +332,163 @@ const monthlyRevenue = computed(() => {
 
 const lowStockCount = computed(() => productosBajoStock.value.length)
 
-// Mapped monthly spline points
-const chartPoints = computed(() => {
-  // Let's draw a beautiful 6-month progression spline
-  const months = ['Dic', 'Ene', 'Feb', 'Mar', 'Abr', 'May']
-  const values = [4200, 3100, 5600, 6800, 4900, Math.round(totalRevenue.value) || 2800]
+// Aggregate functions for Chart.js
+function getMonthlySalesData() {
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  const now = new Date()
+  const resultLabels: string[] = []
+  const resultValues: number[] = []
   
-  // Map values to coordinates on a 600x220 viewBox
-  // X from 50 to 550, Y from 190 (min) to 30 (max)
-  const xCoords = [50, 150, 250, 350, 450, 550]
-  const maxVal = Math.max(...values, 2000)
-  const minVal = 0
+  // Last 6 months
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    resultLabels.push(months[d.getMonth()])
+    
+    const sum = sales.value
+      .filter(s => {
+        const sDate = new Date(s.fecha)
+        return sDate.getMonth() === d.getMonth() && sDate.getFullYear() === d.getFullYear()
+      })
+      .reduce((acc, s) => acc + Number(s.total), 0)
+    resultValues.push(sum)
+  }
   
-  return months.map((m, idx) => {
-    const v = values[idx]
-    // Linear interpolation
-    const yRatio = (v - minVal) / (maxVal - minVal)
-    const y = 190 - (yRatio * 150) // map to graph height
-    return {
-      label: m,
-      val: v,
-      x: xCoords[idx],
-      y: y
+  return { labels: resultLabels, values: resultValues }
+}
+
+function getDeliveryVsTiendaData() {
+  let tienda = 0
+  let delivery = 0
+  sales.value.forEach(s => {
+    if (s.tipoEntrega === 'DELIVERY') {
+      delivery += Number(s.total)
+    } else {
+      tienda += Number(s.total)
     }
   })
-})
+  return { tienda, delivery }
+}
 
-// Spline line helper (catmull-rom or bezier spline control points)
-const splineLineD = computed(() => {
-  const pts = chartPoints.value
-  if (pts.length === 0) return ''
+function getPaymentMethodsData() {
+  const map: Record<string, number> = {}
+  sales.value.forEach(s => {
+    if (s.pagos && s.pagos.length > 0) {
+      s.pagos.forEach((p: any) => {
+        const method = p.metodoPago?.nombre || 'Efectivo'
+        map[method] = (map[method] || 0) + Number(p.monto)
+      })
+    } else {
+      map['Efectivo'] = (map['Efectivo'] || 0) + Number(s.total)
+    }
+  })
   
-  let d = `M ${pts[0].x} ${pts[0].y}`
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i]
-    const p1 = pts[i + 1]
-    // Calculate control points for smooth bezier curve
-    const cpX1 = p0.x + 50
-    const cpY1 = p0.y
-    const cpX2 = p1.x - 50
-    const cpY2 = p1.y
-    d += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${p1.x} ${p1.y}`
+  return {
+    labels: Object.keys(map).length > 0 ? Object.keys(map) : ['Efectivo'],
+    values: Object.keys(map).length > 0 ? Object.values(map) : [1]
   }
-  return d
-})
+}
 
-const splineAreaD = computed(() => {
-  const lineD = splineLineD.value
-  if (!lineD) return ''
-  const pts = chartPoints.value
-  // Close the path to form an area for the gradient
-  return `${lineD} L ${pts[pts.length - 1].x} 190 L ${pts[0].x} 190 Z`
-})
+function renderCharts() {
+  if (salesChart) salesChart.destroy()
+  if (deliveryChart) deliveryChart.destroy()
+  if (paymentsChart) paymentsChart.destroy()
+
+  // 1. Sales by Month Line Chart
+  if (salesChartCanvas.value) {
+    const mData = getMonthlySalesData()
+    salesChart = new Chart(salesChartCanvas.value, {
+      type: 'line',
+      data: {
+        labels: mData.labels,
+        datasets: [{
+          label: 'Ventas (Bs.)',
+          data: mData.values,
+          borderColor: '#D4AF37',
+          backgroundColor: 'rgba(212, 175, 55, 0.15)',
+          fill: true,
+          tension: 0.4,
+          borderWidth: 3,
+          pointBackgroundColor: '#D4AF37',
+          pointBorderColor: '#121212',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#888' }
+          },
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#888' }
+          }
+        }
+      }
+    })
+  }
+
+  // 2. Delivery vs Tienda Doughnut Chart
+  if (deliveryChartCanvas.value) {
+    const dData = getDeliveryVsTiendaData()
+    deliveryChart = new Chart(deliveryChartCanvas.value, {
+      type: 'doughnut',
+      data: {
+        labels: ['Tienda', 'Delivery'],
+        datasets: [{
+          data: [dData.tienda, dData.delivery],
+          backgroundColor: ['#D4AF37', '#3b82f6'],
+          borderWidth: 2,
+          borderColor: '#1e1e1e'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#aaa', font: { size: 11 } }
+          }
+        }
+      }
+    })
+  }
+
+  // 3. Payment Methods Pie Chart
+  if (paymentsChartCanvas.value) {
+    const pData = getPaymentMethodsData()
+    paymentsChart = new Chart(paymentsChartCanvas.value, {
+      type: 'pie',
+      data: {
+        labels: pData.labels,
+        datasets: [{
+          data: pData.values,
+          backgroundColor: ['#D4AF37', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'],
+          borderWidth: 2,
+          borderColor: '#1e1e1e'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#aaa', font: { size: 11 } }
+          }
+        }
+      }
+    })
+  }
+}
 
 // Popular products computation
 const topSellingProducts = computed(() => {
@@ -385,6 +527,21 @@ function formatTime(dateStr: string) {
   return date.toLocaleDateString('es-BO', { day: '2-digit', month: 'short' })
 }
 
+function formatStock(stock: number, unidadesPorCaja: number) {
+  const totalUnits = Number(stock || 0);
+  const factor = Number(unidadesPorCaja || 6);
+  const cajas = Math.floor(totalUnits / factor);
+  const residuo = totalUnits % factor;
+  
+  if (cajas > 0 && residuo > 0) {
+    return `${totalUnits} u (${cajas} c y ${residuo} u)`;
+  } else if (cajas > 0) {
+    return `${totalUnits} u (${cajas} c)`;
+  } else {
+    return `${totalUnits} u`;
+  }
+}
+
 onMounted(async () => {
   updateClock()
   timerInterval = setInterval(updateClock, 1000)
@@ -404,14 +561,19 @@ onMounted(async () => {
     console.error('Error fetching dashboard info:', error)
   } finally {
     // Elegant luxury delay for skeleton loader
-    setTimeout(() => {
+    setTimeout(async () => {
       loading.value = false
+      await nextTick()
+      renderCharts()
     }, 800)
   }
 })
 
 onUnmounted(() => {
   clearInterval(timerInterval)
+  if (salesChart) salesChart.destroy()
+  if (deliveryChart) deliveryChart.destroy()
+  if (paymentsChart) paymentsChart.destroy()
 })
 </script>
 

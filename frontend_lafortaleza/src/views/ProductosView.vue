@@ -7,7 +7,7 @@
     <div class="search-box mb-3" style="max-width: 350px;"><i class="bi bi-search"></i><input type="text" class="form-control" placeholder="Buscar producto..." v-model="search" /></div>
     <div class="table-dark-custom">
       <table class="table table-hover mb-0">
-        <thead><tr><th>#</th><th>Imagen</th><th>Código</th><th>Nombre</th><th>Categoría</th><th>Marca</th><th>P. Compra</th><th>P. Venta</th><th>P. Caja (Unid.)</th><th>Stock</th><th v-if="authStore.isAdmin">Acciones</th></tr></thead>
+        <thead><tr><th>#</th><th>Imagen</th><th>Código</th><th>Nombre</th><th>Categoría</th><th>Marca</th><th>P. Compra</th><th>P. Venta</th><th>Empaque</th><th>Stock</th><th v-if="authStore.isAdmin">Acciones</th></tr></thead>
         <tbody>
           <tr v-for="(p, i) in filtered" :key="p.id">
             <td>{{ i+1 }}</td>
@@ -20,17 +20,38 @@
                 <span v-else class="product-thumb-fallback"><i class="bi bi-box-seam text-secondary"></i></span>
               </div>
             </td>
-            <td><code>{{ p.codigo }}</code></td><td class="fw-semibold">{{ p.nombre }}</td>
-            <td class="text-secondary">{{ p.categoria?.nombre || '-' }}</td><td class="text-secondary">{{ p.marca?.nombre || '-' }}</td>
-            <td>Bs. {{ Number(p.precioCompra).toFixed(2) }}</td><td>Bs. {{ Number(p.precioVenta).toFixed(2) }}</td>
-            <td>
-              <span v-if="p.precioCaja">Bs. {{ Number(p.precioCaja).toFixed(2) }} <small class="text-secondary">({{ p.unidadesPorCaja }}u)</small></span>
-              <span v-else class="text-secondary">-</span>
+            <td><code>{{ p.codigo }}</code></td>
+            <td class="fw-semibold">
+              {{ p.nombre }}
+              <div class="mt-1">
+                <span v-if="p.vendePorUnidad" class="badge bg-success bg-opacity-10 text-success border border-success-subtle me-1" style="font-size: 0.65rem;">Unidad</span>
+                <span v-if="p.vendePorCaja" class="badge bg-info bg-opacity-10 text-info border border-info-subtle" style="font-size: 0.65rem;">Caja</span>
+              </div>
             </td>
-            <td><span :class="Number(p.stock) <= Number(p.stockMinimo) ? 'badge badge-stock-low' : 'badge badge-stock-ok'">{{ p.stock }}</span></td>
-            <td v-if="authStore.isAdmin"><button class="btn btn-sm btn-outline-info me-1" @click="openModal(p)"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" @click="remove(p.id)"><i class="bi bi-trash"></i></button></td>
+            <td class="text-secondary">{{ p.categoria?.nombre || '-' }}</td>
+            <td class="text-secondary">{{ p.marca?.nombre || '-' }}</td>
+            <td>
+              <div style="font-size: 0.85rem;">Bs. {{ Number(p.precioCompraUnidad || p.precioCompra).toFixed(2) }} <small class="text-secondary">(u)</small></div>
+              <div v-if="p.vendePorCaja" class="text-secondary small">Bs. {{ Number(p.precioCompraCaja || (Number(p.precioCompra) * (p.unidadesPorCaja || 6))).toFixed(2) }} <small>(c)</small></div>
+            </td>
+            <td>
+              <div style="font-size: 0.85rem;">Bs. {{ Number(p.precioVentaUnidad || p.precioVenta).toFixed(2) }} <small class="text-secondary">(u)</small></div>
+              <div v-if="p.vendePorCaja" class="text-secondary small">Bs. {{ Number(p.precioVentaCaja || p.precioCaja || (Number(p.precioVenta) * (p.unidadesPorCaja || 6))).toFixed(2) }} <small>(c)</small></div>
+            </td>
+            <td>
+              <span class="text-secondary" style="font-size: 0.85rem;">{{ p.unidadesPorCaja || 6 }} unidades</span>
+            </td>
+            <td>
+              <span :class="Number(p.stock) <= Number(p.stockMinimo) ? 'badge badge-stock-low' : 'badge badge-stock-ok'">
+                {{ formatStock(p.stock, p.unidadesPorCaja) }}
+              </span>
+            </td>
+            <td v-if="authStore.isAdmin">
+              <button class="btn btn-sm btn-outline-info me-1" @click="openModal(p)"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-sm btn-outline-danger" @click="remove(p.id)"><i class="bi bi-trash"></i></button>
+            </td>
           </tr>
-          <tr v-if="filtered.length===0"><td :colspan="authStore.isAdmin ? 10 : 9" class="text-center text-secondary py-4">No se encontraron productos</td></tr>
+          <tr v-if="filtered.length===0"><td :colspan="authStore.isAdmin ? 11 : 10" class="text-center text-secondary py-4">No se encontraron productos</td></tr>
         </tbody>
       </table>
     </div>
@@ -44,13 +65,57 @@
         <div class="col-md-4"><label class="form-label">Categoría</label><select class="form-select" v-model="form.categoriaId"><option :value="null">Seleccione</option><option v-for="c in categorias" :key="c.id" :value="c.id">{{ c.nombre }}</option></select></div>
         <div class="col-md-4"><label class="form-label">Marca</label><select class="form-select" v-model="form.marcaId"><option :value="null">Seleccione</option><option v-for="m in marcas" :key="m.id" :value="m.id">{{ m.nombre }}</option></select></div>
         <div class="col-md-4"><label class="form-label">Proveedor</label><select class="form-select" v-model="form.proveedorId"><option :value="null">Seleccione</option><option v-for="p in proveedores" :key="p.id" :value="p.id">{{ p.nombre }}</option></select></div>
-        <div class="col-md-3"><label class="form-label">Precio Compra (Bs.)</label><input class="form-control" type="number" step="0.01" v-model.number="form.precioCompra" /></div>
-        <div class="col-md-3"><label class="form-label">Precio Venta (Bs.)</label><input class="form-control" type="number" step="0.01" v-model.number="form.precioVenta" /></div>
-        <div class="col-md-3"><label class="form-label">Stock</label><input class="form-control" type="number" v-model.number="form.stock" /></div>
-        <div class="col-md-3"><label class="form-label">Stock Mínimo</label><input class="form-control" type="number" v-model.number="form.stockMinimo" /></div>
-        <div class="col-md-3"><label class="form-label">Unidad de Medida</label><select class="form-select" v-model="form.unidadMedida"><option value="Unidad">Unidad</option><option value="Paquete">Paquete</option><option value="Botella">Botella</option><option value="Caja">Caja</option></select></div>
-        <div class="col-md-3"><label class="form-label">Precio Caja (Bs.)</label><input class="form-control" type="number" step="0.01" v-model.number="form.precioCaja" placeholder="Opcional" /></div>
-        <div class="col-md-3"><label class="form-label">Unidades x Caja</label><input class="form-control" type="number" v-model.number="form.unidadesPorCaja" placeholder="Opcional" /></div>
+        <!-- Checkboxes for selling options -->
+        <div class="col-12 border-bottom border-dark pb-2 mb-2">
+          <label class="form-label d-block text-gold">Opciones de Venta/Empaque</label>
+          <div class="d-flex gap-4">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="vendePorUnidad" v-model="form.vendePorUnidad" />
+              <label class="form-check-label" for="vendePorUnidad">Permitir Venta por Unidad</label>
+            </div>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="vendePorCaja" v-model="form.vendePorCaja" />
+              <label class="form-check-label" for="vendePorCaja">Permitir Venta por Caja</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4"><label class="form-label">Unidad de Medida</label><select class="form-select" v-model="form.unidadMedida"><option value="Unidad">Unidad</option><option value="Botella">Botella</option><option value="Lata">Lata</option><option value="Paquete">Paquete</option><option value="Caja">Caja</option></select></div>
+        <div class="col-md-4"><label class="form-label">Unidades por Caja</label><input class="form-control" type="number" v-model.number="form.unidadesPorCaja" @input="updateBoxPrices" /></div>
+        <div class="col-md-4">&nbsp;</div>
+
+        <!-- Precios de Unidad -->
+        <div class="col-md-6 border-end border-dark pe-3" v-if="form.vendePorUnidad">
+          <h6 class="text-gold mb-2"><i class="bi bi-box-seam me-1"></i>Precios por Unidad</h6>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small">P. Compra Unidad (Bs.)</label>
+              <input class="form-control" type="number" step="0.01" v-model.number="form.precioCompraUnidad" @input="syncFromUnitPrices" />
+            </div>
+            <div class="col-6">
+              <label class="form-label small">P. Venta Unidad (Bs.)</label>
+              <input class="form-control" type="number" step="0.01" v-model.number="form.precioVentaUnidad" @input="syncFromUnitPrices" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Precios de Caja -->
+        <div class="col-md-6 ps-3" v-if="form.vendePorCaja">
+          <h6 class="text-gold mb-2"><i class="bi bi-box me-1"></i>Precios por Caja</h6>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small">P. Compra Caja (Bs.)</label>
+              <input class="form-control" type="number" step="0.01" v-model.number="form.precioCompraCaja" />
+            </div>
+            <div class="col-6">
+              <label class="form-label small">P. Venta Caja (Bs.)</label>
+              <input class="form-control" type="number" step="0.01" v-model.number="form.precioVentaCaja" />
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6"><label class="form-label">Stock Total (en Unidades)</label><input class="form-control" type="number" v-model.number="form.stock" /></div>
+        <div class="col-md-6"><label class="form-label">Stock Mínimo (en Unidades)</label><input class="form-control" type="number" v-model.number="form.stockMinimo" /></div>
         <div class="col-12">
           <label class="form-label">Imagen o Video del Producto</label>
           <div class="input-group">
@@ -87,7 +152,7 @@ import { useAuthStore } from '@/stores/auth'
 const authStore = useAuthStore()
 const items = ref<any[]>([]); const categorias = ref<any[]>([]); const marcas = ref<any[]>([]); const proveedores = ref<any[]>([])
 const search = ref(''); const editing = ref<number|null>(null); const modalRef = ref<HTMLElement>(); let bsModal: Modal
-const form = ref({ nombre: '', codigo: '', descripcion: '', precioCompra: 0, precioVenta: 0, stock: 0, stockMinimo: 5, unidadMedida: 'Unidad', unidadesPorCaja: 1 as number|null, precioCaja: null as number|null, imagen: '', categoriaId: null as number|null, marcaId: null as number|null, proveedorId: null as number|null })
+const form = ref({ nombre: '', codigo: '', descripcion: '', precioCompra: 0, precioVenta: 0, stock: 0, stockMinimo: 5, unidadMedida: 'Unidad', vendePorUnidad: true, vendePorCaja: true, unidadesPorCaja: 6, precioCompraUnidad: 0, precioCompraCaja: 0, precioVentaUnidad: 0, precioVentaCaja: 0, precioCaja: null as number|null, imagen: '', categoriaId: null as number|null, marcaId: null as number|null, proveedorId: null as number|null })
 const filtered = computed(() => items.value.filter(i => i.nombre.toLowerCase().includes(search.value.toLowerCase()) || i.codigo.toLowerCase().includes(search.value.toLowerCase())))
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -95,6 +160,35 @@ const fileInputRef = ref<HTMLInputElement | null>(null)
 function isVideoUrl(url?: string) {
   if (!url) return false
   return url.match(/\.(mp4|webm|ogg|mov|avi)$/i) || url.includes('/videos/')
+}
+
+function formatStock(stock: number, unidadesPorCaja: number) {
+  const totalUnits = Number(stock || 0);
+  const factor = Number(unidadesPorCaja || 6);
+  const cajas = Math.floor(totalUnits / factor);
+  const residuo = totalUnits % factor;
+  
+  if (cajas > 0 && residuo > 0) {
+    return `${totalUnits} u (${cajas} c y ${residuo} u)`;
+  } else if (cajas > 0) {
+    return `${totalUnits} u (${cajas} c)`;
+  } else {
+    return `${totalUnits} u`;
+  }
+}
+
+function updateBoxPrices() {
+  const factor = Number(form.value.unidadesPorCaja || 6);
+  if (form.value.precioCompraUnidad) {
+    form.value.precioCompraCaja = Number((form.value.precioCompraUnidad * factor).toFixed(2));
+  }
+  if (form.value.precioVentaUnidad) {
+    form.value.precioVentaCaja = Number((form.value.precioVentaUnidad * factor).toFixed(2));
+  }
+}
+
+function syncFromUnitPrices() {
+  updateBoxPrices();
 }
 
 function triggerFileInput() {
@@ -164,7 +258,13 @@ function openModal(item?: any) {
       stock: Number(item.stock),
       stockMinimo: Number(item.stockMinimo),
       unidadMedida: item.unidadMedida || 'Unidad',
-      unidadesPorCaja: item.unidadesPorCaja,
+      vendePorUnidad: item.vendePorUnidad !== undefined && item.vendePorUnidad !== null ? !!item.vendePorUnidad : true,
+      vendePorCaja: item.vendePorCaja !== undefined && item.vendePorCaja !== null ? !!item.vendePorCaja : true,
+      unidadesPorCaja: item.unidadesPorCaja !== undefined && item.unidadesPorCaja !== null ? Number(item.unidadesPorCaja) : 6,
+      precioCompraUnidad: item.precioCompraUnidad !== undefined && item.precioCompraUnidad !== null ? Number(item.precioCompraUnidad) : Number(item.precioCompra),
+      precioCompraCaja: item.precioCompraCaja !== undefined && item.precioCompraCaja !== null ? Number(item.precioCompraCaja) : Number(item.precioCompra) * 6,
+      precioVentaUnidad: item.precioVentaUnidad !== undefined && item.precioVentaUnidad !== null ? Number(item.precioVentaUnidad) : Number(item.precioVenta),
+      precioVentaCaja: item.precioVentaCaja !== undefined && item.precioVentaCaja !== null ? Number(item.precioVentaCaja) : Number(item.precioVenta) * 6,
       precioCaja: item.precioCaja ? Number(item.precioCaja) : null,
       imagen: item.imagen || '',
       categoriaId: item.categoriaId,
@@ -182,7 +282,13 @@ function openModal(item?: any) {
       stock: 0,
       stockMinimo: 5,
       unidadMedida: 'Unidad',
-      unidadesPorCaja: null,
+      vendePorUnidad: true,
+      vendePorCaja: true,
+      unidadesPorCaja: 6,
+      precioCompraUnidad: 0,
+      precioCompraCaja: 0,
+      precioVentaUnidad: 0,
+      precioVentaCaja: 0,
       precioCaja: null,
       imagen: '',
       categoriaId: null,
@@ -197,12 +303,18 @@ async function save() {
   try {
     const payload = {
       ...form.value,
-      precioCompra: Number(form.value.precioCompra),
-      precioVenta: Number(form.value.precioVenta),
+      precioCompra: Number(form.value.precioCompraUnidad || form.value.precioCompra),
+      precioVenta: Number(form.value.precioVentaUnidad || form.value.precioVenta),
       stock: Number(form.value.stock),
       stockMinimo: Number(form.value.stockMinimo),
-      unidadesPorCaja: form.value.unidadesPorCaja ? Number(form.value.unidadesPorCaja) : null,
-      precioCaja: form.value.precioCaja ? Number(form.value.precioCaja) : null,
+      vendePorUnidad: !!form.value.vendePorUnidad,
+      vendePorCaja: !!form.value.vendePorCaja,
+      unidadesPorCaja: Number(form.value.unidadesPorCaja || 6),
+      precioCompraUnidad: Number(form.value.precioCompraUnidad),
+      precioCompraCaja: Number(form.value.precioCompraCaja),
+      precioVentaUnidad: Number(form.value.precioVentaUnidad),
+      precioVentaCaja: Number(form.value.precioVentaCaja),
+      precioCaja: Number(form.value.precioVentaCaja),
     };
     if (editing.value) {
       await http.patch(`productos/${editing.value}`, payload);

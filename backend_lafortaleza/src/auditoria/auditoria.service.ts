@@ -40,7 +40,7 @@ export class AuditoriaService {
 
   async obtenerTodos(): Promise<Auditoria[]> {
     return await this.auditoriaRepo.find({
-      order: { fecha: 'DESC' },
+      order: { fechaCreacion: 'DESC' },
       relations: ['usuario'],
     });
   }

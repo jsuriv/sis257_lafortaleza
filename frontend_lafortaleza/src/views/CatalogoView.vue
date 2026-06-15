@@ -438,7 +438,7 @@
             <ul class="list-unstyled text-secondary d-flex flex-column gap-3">
               <li class="d-flex align-items-start gap-2">
                 <i class="bi bi-geo-alt-fill text-gold mt-1"></i>
-                <span>Calle El Paraiso 123, Tarija - Bolivia</span>
+                <span>Calle El Paraiso 123, Sucre - Bolivia</span>
               </li>
               <li class="d-flex align-items-center gap-2">
                 <i class="bi bi-whatsapp text-gold"></i>
@@ -485,7 +485,7 @@
               {{ selectedProduct.descripcion || 'Este producto no cuenta con una descripción detallada en este momento. Garantizamos el estándar de calidad característico de su marca.' }}
             </p>
             
-            <div class="row g-2 justify-content-center">
+            <div v-if="!selectedProduct.esCombo" class="row g-2 justify-content-center">
               <div class="col-5">
                 <div class="p-2 border rounded border-secondary h-100 d-flex flex-column justify-content-between" style="background: rgba(255,255,255,0.02);">
                   <div>
@@ -500,10 +500,10 @@
                     </strong>
                   </div>
                   <div class="mt-2" v-if="selectedProduct.stock >= 1">
-                    <div class="input-group input-group-sm mx-auto" style="width: 100px;">
-                      <button class="btn btn-outline-secondary" type="button" @click="qtyUnidad > 0 ? qtyUnidad-- : null" style="padding: 0 12px;">-</button>
-                      <input type="number" min="0" step="1" class="form-control text-center bg-transparent text-white p-0 border-secondary fw-bold no-arrows" v-model.number="qtyUnidad" @input="sanitizeUnidad">
-                      <button class="btn btn-outline-secondary" type="button" @click="qtyUnidad < selectedProduct.stock ? qtyUnidad++ : null" style="padding: 0 12px;">+</button>
+                    <div class="qty-selector-custom mx-auto">
+                      <button class="qty-btn-custom" type="button" @click="qtyUnidad > 0 ? qtyUnidad-- : null">-</button>
+                      <input type="number" min="0" step="1" class="qty-input-custom" v-model.number="qtyUnidad" @input="sanitizeUnidad" />
+                      <button class="qty-btn-custom" type="button" @click="qtyUnidad < selectedProduct.stock ? qtyUnidad++ : null">+</button>
                     </div>
                   </div>
                 </div>
@@ -520,10 +520,10 @@
                     </small>
                   </div>
                   <div class="mt-2" v-if="selectedProduct.stock >= selectedProduct.unidadesPorCaja">
-                    <div class="input-group input-group-sm mx-auto" style="width: 100px;">
-                      <button class="btn btn-outline-secondary" type="button" @click="qtyCaja > 0 ? qtyCaja-- : null" style="padding: 0 12px;">-</button>
-                      <input type="number" min="0" step="1" class="form-control text-center bg-transparent text-white p-0 border-secondary fw-bold no-arrows" v-model.number="qtyCaja" @input="sanitizeCaja">
-                      <button class="btn btn-outline-secondary" type="button" @click="(qtyCaja + 1) * selectedProduct.unidadesPorCaja <= selectedProduct.stock ? qtyCaja++ : null" style="padding: 0 12px;">+</button>
+                    <div class="qty-selector-custom mx-auto">
+                      <button class="qty-btn-custom" type="button" @click="qtyCaja > 0 ? qtyCaja-- : null">-</button>
+                      <input type="number" min="0" step="1" class="qty-input-custom" v-model.number="qtyCaja" @input="sanitizeCaja" />
+                      <button class="qty-btn-custom" type="button" @click="(qtyCaja + 1) * selectedProduct.unidadesPorCaja <= selectedProduct.stock ? qtyCaja++ : null">+</button>
                     </div>
                   </div>
                   <span v-else class="text-danger d-block mt-2" style="font-size:0.8rem;">Stock insuf.</span>
@@ -535,6 +535,63 @@
                   <strong :class="selectedProduct.stock > 0 ? 'text-success' : 'text-danger'" style="font-size: 1.1rem;">
                     {{ selectedProduct.stock > 0 ? 'En Stock' : 'Agotado' }}
                   </strong>
+                </div>
+              </div>
+            </div>
+            
+            <div v-else class="text-start px-3">
+              <h5 class="text-gold mb-3 border-bottom border-dark pb-2 animate-glow" style="font-size: 1rem; font-family: 'Cinzel', serif;">
+                <i class="bi bi-tools text-gold me-2"></i>Arma tu Combo
+              </h5>
+              
+              <div v-if="loadingComboItems" class="text-center py-4">
+                <div class="spinner-border text-gold spinner-border-sm" role="status"></div>
+                <small class="text-secondary d-block mt-2">Cargando componentes del combo...</small>
+              </div>
+              
+              <div v-else class="mb-4">
+                <div v-for="(comp, index) in customizedComponents" :key="index" class="mb-3 p-2 rounded border border-secondary" style="background: rgba(255,255,255,0.01);">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-white fw-semibold" style="font-size: 0.85rem;">
+                      {{ comp.defaultProducto.nombre }} (x{{ comp.cantidad }})
+                    </span>
+                    <span class="badge bg-dark text-gold border border-gold border-opacity-25" style="font-size: 0.65rem;">
+                      {{ comp.defaultProducto.categoria?.nombre || 'General' }}
+                    </span>
+                  </div>
+                  <select class="form-select-gold py-1" v-model="comp.selectedProductoId" style="font-size: 0.82rem; padding: 0.4rem 0.8rem;">
+                    <option v-for="alt in getAlternativeProducts(comp.categoriaId)" :key="alt.id" :value="alt.id">
+                      {{ alt.nombre }} — Stock: {{ alt.stock }} u.
+                    </option>
+                  </select>
+                </div>
+                
+                <!-- Hielo option checkbox -->
+                <div class="form-check form-switch p-3 rounded border border-secondary mb-3 mt-4" style="background: rgba(255,255,255,0.02);">
+                  <input class="form-check-input" type="checkbox" id="hieloSwitch" v-model="conHielo" style="cursor: pointer;" />
+                  <label class="form-check-label text-white fw-bold d-flex align-items-center gap-2" for="hieloSwitch" style="cursor: pointer; font-size: 0.9rem;">
+                    <i class="bi bi-snow text-info"></i>
+                    <span>¿Agregar bolsa de hielo a tu combo? (+ Bs. 5.00)</span>
+                  </label>
+                  <small class="text-secondary d-block mt-1 ms-1" style="font-size: 0.75rem;">Recibe tu combo helado y listo para disfrutar.</small>
+                </div>
+
+                <!-- Final price display & quantity -->
+                <div class="d-flex justify-content-between align-items-center mt-4 p-3 rounded border border-gold border-opacity-25" style="background: rgba(212, 175, 55, 0.03);">
+                  <div>
+                    <span class="text-secondary d-block" style="font-size: 0.75rem;">PRECIO COMBO:</span>
+                    <strong class="text-gold" style="font-size: 1.4rem;">
+                      Bs. {{ (getDiscountedPrice(selectedProduct) + (conHielo ? 5 : 0)).toFixed(2) }}
+                    </strong>
+                  </div>
+                  <div class="d-flex flex-column align-items-end">
+                    <span class="text-secondary mb-1" style="font-size: 0.75rem;">CANTIDAD COMBO:</span>
+                    <div class="qty-selector-custom">
+                      <button class="qty-btn-custom" type="button" @click="qtyUnidad > 0 ? qtyUnidad-- : null">-</button>
+                      <input type="number" min="0" step="1" class="qty-input-custom" v-model.number="qtyUnidad" @input="sanitizeUnidad" />
+                      <button class="qty-btn-custom" type="button" @click="qtyUnidad < selectedProduct.stock ? qtyUnidad++ : null">+</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -586,6 +643,17 @@
                       <td>
                         <span class="fw-semibold text-white d-block">{{ item.nombre }} <span class="text-gold" style="font-size: 0.75rem;">({{ item.tipoVenta }})</span></span>
                         <small class="text-secondary">{{ item.codigo }}</small>
+                        <!-- Customize Components Sublist -->
+                        <div v-if="item.componentes && item.componentes.length > 0" class="mt-1 ps-2 border-start border-gold" style="border-width: 2px !important;">
+                          <small class="text-secondary d-block" style="font-size: 0.72rem; line-height: 1.1;">Componentes:</small>
+                          <small v-for="c in item.componentes" :key="c.productoId" class="text-light d-block" style="font-size: 0.68rem; line-height: 1.1;">
+                            • {{ c.nombre }} (x{{ c.cantidad }})
+                          </small>
+                        </div>
+                        <!-- Con Hielo Badge -->
+                        <span v-if="item.conHielo" class="badge bg-info text-dark mt-1 d-inline-flex align-items-center gap-1" style="font-size: 0.65rem;">
+                          <i class="bi bi-snow"></i> Con Hielo
+                        </span>
                       </td>
                       <td>
                         <div class="text-white">Bs. {{ Number(item.precio).toFixed(2) }}</div>
@@ -607,6 +675,49 @@
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              <!-- Tipo de Entrega & Delivery details -->
+              <div class="row g-3 p-3 rounded border border-secondary mb-3" style="background: rgba(255,255,255,0.02);">
+                <div class="col-12">
+                  <label class="form-label text-gold fw-bold mb-2"><i class="bi bi-truck me-2"></i>Tipo de Entrega</label>
+                  <div class="d-flex gap-3 mb-3">
+                    <div class="flex-grow-1">
+                      <input type="radio" class="btn-check" name="cartTipoEntrega" id="cartEntregaTienda" value="Tienda" v-model="cartTipoEntrega" />
+                      <label class="btn btn-outline-custom w-100 py-2 d-flex align-items-center justify-content-center gap-2" for="cartEntregaTienda" style="border-radius: 8px;">
+                        <i class="bi bi-shop"></i> Recoger en Tienda
+                      </label>
+                    </div>
+                    <div class="flex-grow-1">
+                      <input type="radio" class="btn-check" name="cartTipoEntrega" id="cartEntregaDelivery" value="Delivery" v-model="cartTipoEntrega" />
+                      <label class="btn btn-outline-custom w-100 py-2 d-flex align-items-center justify-content-center gap-2" for="cartEntregaDelivery" style="border-radius: 8px;">
+                        <i class="bi bi-geo-alt"></i> Delivery
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <!-- Si es Delivery, pedir datos -->
+                  <div v-if="cartTipoEntrega === 'Delivery'" class="p-3 rounded border border-secondary" style="background: rgba(0, 0, 0, 0.2);">
+                    <div class="row g-2">
+                      <div class="col-12">
+                        <label class="form-label mb-1" style="font-size: 0.75rem;">Dirección de Entrega *</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Ej: Av. Las Americas #123" v-model="cartDireccion" required />
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label mb-1" style="font-size: 0.75rem;">Referencia de Ubicación</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Ej: Portón dorado al lado de la farmacia" v-model="cartReferencia" />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label mb-1" style="font-size: 0.75rem;">Teléfono de Contacto *</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Ej: 71234567" v-model="cartTelefonoContacto" required />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label mb-1" style="font-size: 0.75rem;">Costo de Envío</label>
+                        <input type="text" class="form-control form-control-sm bg-transparent border-0 text-gold fw-bold" readonly :value="'Bs. ' + cartCostoDelivery.toFixed(2)" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Payment Method & Total -->
@@ -728,13 +839,36 @@ const newsletterEmail = ref('')
 const qtyUnidad = ref(0)
 const qtyCaja = ref(0)
 
+// Combo builder state
+const comboItems = ref<any[]>([])
+const loadingComboItems = ref(false)
+const conHielo = ref(false)
+const customizedComponents = ref<any[]>([])
+
 // Cart and History state
-const cart = ref<{ productoId: number; nombre: string; codigo: string; cantidad: number; precio: number; stock: number; tipoVenta: string; factorUnidades: number }[]>([])
+const cart = ref<{
+  productoId: number;
+  nombre: string;
+  codigo: string;
+  cantidad: number;
+  precio: number;
+  stock: number;
+  tipoVenta: string;
+  factorUnidades: number;
+  conHielo?: boolean;
+  componentes?: { productoId: number; cantidad: number; nombre: string }[];
+}[]>([])
 const metodosPago = ref<any[]>([])
 const cartMetodoPagoId = ref(1)
 const processingCart = ref(false)
 const cartModalRef = ref<HTMLElement>()
 let cartModal: Modal | null = null
+
+const cartTipoEntrega = ref('Tienda')
+const cartDireccion = ref('')
+const cartReferencia = ref('')
+const cartTelefonoContacto = ref('')
+const cartCostoDelivery = ref(10.00)
 
 const pedidos = ref<any[]>([])
 const loadingHistory = ref(false)
@@ -928,63 +1062,195 @@ function getDiscountedPrice(p: any): number {
   return Number(p.precioVenta)
 }
 
-function openDetails(product: any) {
+async function openDetails(product: any) {
   selectedProduct.value = product
   qtyUnidad.value = 0
   qtyCaja.value = 0
+  conHielo.value = false
+  comboItems.value = []
+  customizedComponents.value = []
+  
   if (detailsModal) detailsModal.show()
+
+  if (product.esCombo) {
+    loadingComboItems.value = true
+    try {
+      const res = await http.get(`productos/${product.id}/combo-items`)
+      comboItems.value = res.data
+      customizedComponents.value = res.data.map((item: any) => ({
+        defaultProducto: item.producto,
+        selectedProductoId: item.productoId,
+        cantidad: item.cantidad,
+        categoriaId: item.producto?.categoriaId || item.producto?.categoria?.id
+      }))
+    } catch (e) {
+      console.error('Error fetching combo items:', e)
+    } finally {
+      loadingComboItems.value = false
+    }
+  }
+}
+
+function getAlternativeProducts(categoriaId: number) {
+  if (!categoriaId) return []
+  return products.value.filter(p => p.categoriaId === categoriaId && !p.esCombo && p.stock > 0)
 }
 
 function handleLogout() {
   authStore.logout()
   cart.value = []
+  cartTipoEntrega.value = 'Tienda'
+  cartDireccion.value = ''
+  cartReferencia.value = ''
+  cartTelefonoContacto.value = ''
 }
 
 // Shopping Cart Actions
 const cartCount = computed(() => cart.value.reduce((s, i) => s + i.cantidad, 0))
-const cartTotal = computed(() => cart.value.reduce((s, i) => s + (i.cantidad * i.precio), 0))
+const cartTotal = computed(() => {
+  const baseTotal = cart.value.reduce((s, i) => s + (i.cantidad * i.precio), 0)
+  if (cartTipoEntrega.value === 'Delivery') {
+    return baseTotal + cartCostoDelivery.value
+  }
+  return baseTotal
+})
 
 function sanitizeUnidad() {
-  if (qtyUnidad.value === null || qtyUnidad.value === undefined || qtyUnidad.value === '') return;
+  if (qtyUnidad.value === null || qtyUnidad.value === undefined || (qtyUnidad.value as any) === '') return;
   let val = Math.floor(Number(qtyUnidad.value));
   if (isNaN(val) || val < 0) val = 0;
   qtyUnidad.value = val;
 }
 
 function sanitizeCaja() {
-  if (qtyCaja.value === null || qtyCaja.value === undefined || qtyCaja.value === '') return;
+  if (qtyCaja.value === null || qtyCaja.value === undefined || (qtyCaja.value as any) === '') return;
   let val = Math.floor(Number(qtyCaja.value));
   if (isNaN(val) || val < 0) val = 0;
   qtyCaja.value = val;
 }
 
+function getConsumedStockInCart(pId: number) {
+  let total = 0
+  for (const item of cart.value) {
+    if (item.productoId === pId && !item.componentes) {
+      total += item.cantidad * item.factorUnidades
+    }
+    if (item.componentes) {
+      for (const comp of item.componentes) {
+        if (comp.productoId === pId) {
+          total += item.cantidad * comp.cantidad
+        }
+      }
+    }
+  }
+  return total
+}
+
 function addToCartCombined() {
-  if (qtyUnidad.value === 0 && qtyCaja.value === 0) {
-    Swal.fire({ icon: 'warning', title: 'Atención', text: 'Selecciona al menos una cantidad para llevar al carrito.' })
+  if (!authStore.isLoggedIn) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Iniciar Sesión',
+      text: 'Debes iniciar sesión con tu cuenta para utilizar el carrito de compras.',
+      showCancelButton: true,
+      confirmButtonText: 'Iniciar Sesión',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: 'var(--gold)',
+    }).then((res) => {
+      if (res.isConfirmed) {
+        router.push('/login')
+      }
+    })
     return
-  }
-
-  const stockNeededUnidad = qtyUnidad.value * 1;
-  const stockNeededCaja = qtyCaja.value * (selectedProduct.value.unidadesPorCaja || 1);
-  const currentTotalInCart = cart.value.filter(i => i.productoId === selectedProduct.value.id).reduce((s, i) => s + (i.cantidad * i.factorUnidades), 0);
-
-  if (currentTotalInCart + stockNeededUnidad + stockNeededCaja > selectedProduct.value.stock) {
-    Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: `No hay suficiente stock. Ya tienes ${currentTotalInCart} u. en el carrito. Stock total: ${selectedProduct.value.stock} u.` })
-    return
-  }
-
-  let added = false;
-  if (qtyUnidad.value > 0) {
-    addToCart(selectedProduct.value, 'Unidad', qtyUnidad.value, false);
-    added = true;
-  }
-  if (qtyCaja.value > 0) {
-    addToCart(selectedProduct.value, 'Caja', qtyCaja.value, false);
-    added = true;
   }
   
-  if (added) {
+  if (authStore.user?.rol?.nombre !== 'CLIENTE') {
+    Swal.fire({ icon: 'warning', title: 'Acceso inválido', text: 'Solo las cuentas de clientes pueden usar el carrito de compras.' })
+    return
+  }
+
+  if (selectedProduct.value.esCombo) {
+    if (qtyUnidad.value === 0) {
+      Swal.fire({ icon: 'warning', title: 'Atención', text: 'Selecciona al menos una cantidad para llevar al carrito.' })
+      return
+    }
+
+    // Validar stock de cada subproducto personalizado
+    for (const comp of customizedComponents.value) {
+      const subproduct = products.value.find(p => p.id === comp.selectedProductoId)
+      if (!subproduct) continue
+      
+      const consumed = getConsumedStockInCart(comp.selectedProductoId)
+      const needed = comp.cantidad * qtyUnidad.value
+      
+      if (consumed + needed > subproduct.stock) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Stock insuficiente',
+          text: `No hay suficiente stock del componente "${subproduct.nombre}". Disponible: ${subproduct.stock} u., Ya en carrito: ${consumed} u., Requerido ahora: ${needed} u.`
+        })
+        return
+      }
+    }
+
+    // Agregar combo al carrito
+    const mappedComponentes = customizedComponents.value.map(comp => {
+      const prod = products.value.find(p => p.id === comp.selectedProductoId)
+      return {
+        productoId: comp.selectedProductoId,
+        cantidad: comp.cantidad,
+        nombre: prod ? prod.nombre : 'Producto'
+      }
+    })
+
+    const basePrecio = getDiscountedPrice(selectedProduct.value)
+    const finalPrecio = basePrecio + (conHielo.value ? 5.00 : 0)
+
+    cart.value.push({
+      productoId: selectedProduct.value.id,
+      nombre: selectedProduct.value.nombre,
+      codigo: selectedProduct.value.codigo,
+      cantidad: qtyUnidad.value,
+      precio: finalPrecio,
+      stock: selectedProduct.value.stock,
+      tipoVenta: 'Unidad',
+      factorUnidades: 1,
+      conHielo: conHielo.value,
+      componentes: mappedComponentes
+    })
+
+    toastSuccess(`Agregado al carrito: ${selectedProduct.value.nombre} x${qtyUnidad.value}`)
     if (detailsModal) detailsModal.hide()
+
+  } else {
+    // Producto normal
+    if (qtyUnidad.value === 0 && qtyCaja.value === 0) {
+      Swal.fire({ icon: 'warning', title: 'Atención', text: 'Selecciona al menos una cantidad para llevar al carrito.' })
+      return
+    }
+
+    const stockNeededUnidad = qtyUnidad.value * 1;
+    const stockNeededCaja = qtyCaja.value * (selectedProduct.value.unidadesPorCaja || 1);
+    const currentTotalInCart = getConsumedStockInCart(selectedProduct.value.id);
+
+    if (currentTotalInCart + stockNeededUnidad + stockNeededCaja > selectedProduct.value.stock) {
+      Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: `No hay suficiente stock. Ya tienes ${currentTotalInCart} u. en el carrito. Stock total: ${selectedProduct.value.stock} u.` })
+      return
+    }
+
+    let added = false;
+    if (qtyUnidad.value > 0) {
+      addToCart(selectedProduct.value, 'Unidad', qtyUnidad.value, false);
+      added = true;
+    }
+    if (qtyCaja.value > 0) {
+      addToCart(selectedProduct.value, 'Caja', qtyCaja.value, false);
+      added = true;
+    }
+    
+    if (added) {
+      if (detailsModal) detailsModal.hide()
+    }
   }
 }
 
@@ -1011,11 +1277,11 @@ function addToCart(p: any, tipoVenta: string = 'Unidad', cantidad: number = 1, h
     return
   }
   
-  const existing = cart.value.find(i => i.productoId === p.id && i.tipoVenta === tipoVenta)
+  const existing = cart.value.find(i => i.productoId === p.id && i.tipoVenta === tipoVenta && !i.componentes)
   const factor = tipoVenta === 'Caja' ? (p.unidadesPorCaja || 1) : 1
   
   // Calculate total consumed stock for this product in the cart
-  const currentTotalInCart = cart.value.filter(i => i.productoId === p.id).reduce((s, i) => s + (i.cantidad * i.factorUnidades), 0)
+  const currentTotalInCart = getConsumedStockInCart(p.id)
 
   if (currentTotalInCart + (factor * cantidad) > p.stock) {
     Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: `No hay más stock disponible de ${p.nombre}.` })
@@ -1068,8 +1334,22 @@ function toastSuccess(msg: string) {
   Toast.fire({ icon: 'success', title: msg })
 }
 
-function openCart() {
+async function openCart() {
   if (cartModal) cartModal.show()
+  
+  // Try to pre-fill client info if empty
+  if (authStore.isLoggedIn && !cartTelefonoContacto.value && !cartDireccion.value) {
+    try {
+      const cRes = await http.get('clientes')
+      const currentClient = cRes.data.find((c: any) => c.correo === authStore.user?.correo)
+      if (currentClient) {
+        if (currentClient.telefono) cartTelefonoContacto.value = currentClient.telefono
+        if (currentClient.direccion) cartDireccion.value = currentClient.direccion
+      }
+    } catch (e) {
+      console.error('Error auto-filling client info:', e)
+    }
+  }
 }
 
 function removeFromCart(idx: number) {
@@ -1078,13 +1358,33 @@ function removeFromCart(idx: number) {
 
 function increaseQty(idx: number) {
   const item = cart.value[idx]
-  // Calculate total consumed stock for this product in the cart
-  const currentTotalInCart = cart.value.filter(i => i.productoId === item.productoId).reduce((s, i) => s + (i.cantidad * i.factorUnidades), 0)
-
-  if (currentTotalInCart + item.factorUnidades <= item.stock) {
+  
+  if (item.componentes && item.componentes.length > 0) {
+    // Check stock for each component in the combo
+    for (const comp of item.componentes) {
+      const subproduct = products.value.find(p => p.id === comp.productoId)
+      if (!subproduct) continue
+      
+      const consumed = getConsumedStockInCart(comp.productoId)
+      // Incrementing item.cantidad by 1 means we need `comp.cantidad` more units of this subproduct
+      if (consumed + comp.cantidad > subproduct.stock) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Stock insuficiente',
+          text: `No hay suficiente stock del componente "${subproduct.nombre}" para aumentar este combo.`
+        })
+        return
+      }
+    }
     item.cantidad++
   } else {
-    Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: 'No hay más stock disponible para este producto.' })
+    // Normal product
+    const currentTotalInCart = getConsumedStockInCart(item.productoId)
+    if (currentTotalInCart + item.factorUnidades <= item.stock) {
+      item.cantidad++
+    } else {
+      Swal.fire({ icon: 'warning', title: 'Límite alcanzado', text: 'No hay más stock disponible para este producto.' })
+    }
   }
 }
 
@@ -1101,6 +1401,19 @@ async function confirmarCompra() {
   if (cart.value.length === 0) return
   processingCart.value = true
   
+  if (cartTipoEntrega.value === 'Delivery') {
+    if (!cartDireccion.value.trim()) {
+      Swal.fire({ icon: 'warning', title: 'Dirección requerida', text: 'Por favor, ingresa una dirección para la entrega a domicilio.' })
+      processingCart.value = false
+      return
+    }
+    if (!cartTelefonoContacto.value.trim()) {
+      Swal.fire({ icon: 'warning', title: 'Teléfono requerido', text: 'Por favor, ingresa un teléfono de contacto para el delivery.' })
+      processingCart.value = false
+      return
+    }
+  }
+  
   try {
     const cRes = await http.get('clientes')
     const currentClient = cRes.data.find((c: any) => c.correo === authStore.user?.correo)
@@ -1109,8 +1422,25 @@ async function confirmarCompra() {
     await http.post('ventas', {
       clienteId: clienteId,
       usuarioId: authStore.user?.id,
-      detalles: cart.value.map(i => ({ productoId: i.productoId, cantidad: i.cantidad, precio: i.precio, tipoVenta: i.tipoVenta })),
-      pagos: [{ metodoPagoId: cartMetodoPagoId.value, monto: cartTotal.value }],
+      tipoEntrega: cartTipoEntrega.value,
+      direccion: cartTipoEntrega.value === 'Delivery' ? cartDireccion.value.trim() : undefined,
+      referencia: cartTipoEntrega.value === 'Delivery' ? cartReferencia.value.trim() : undefined,
+      telefonoContacto: cartTipoEntrega.value === 'Delivery' ? cartTelefonoContacto.value.trim() : undefined,
+      costoDelivery: cartTipoEntrega.value === 'Delivery' ? cartCostoDelivery.value : undefined,
+      detalles: cart.value.map(i => ({
+        productoId: i.productoId,
+        cantidad: i.cantidad,
+        precio: i.precio,
+        tipoVenta: i.tipoVenta,
+        conHielo: i.conHielo || false,
+        componentes: i.componentes ? i.componentes.map(c => ({ productoId: c.productoId, cantidad: c.cantidad })) : undefined
+      })),
+      pagos: [{ 
+        metodoPagoId: cartMetodoPagoId.value, 
+        monto: cartTotal.value,
+        montoRecibido: cartTotal.value,
+        cambio: 0
+      }],
       estado: 'Pendiente'
     })
     
@@ -1123,6 +1453,10 @@ async function confirmarCompra() {
     })
     
     cart.value = []
+    cartTipoEntrega.value = 'Tienda'
+    cartDireccion.value = ''
+    cartReferencia.value = ''
+    cartTelefonoContacto.value = ''
     if (cartModal) cartModal.hide()
     await loadCatalog()
   } catch (e: any) {
@@ -1858,5 +2192,65 @@ function subscribeNewsletter() {
 
 .max-width-600 {
   max-width: 600px;
+}
+
+/* Custom Quantity Selector in Details Modal */
+.qty-selector-custom {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  height: 36px;
+  width: 110px;
+}
+
+.qty-btn-custom {
+  background: transparent;
+  border: none;
+  color: #a0a0a0;
+  width: 32px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qty-btn-custom:hover {
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--gold);
+}
+
+.qty-input-custom {
+  background: transparent;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  width: 46px;
+  height: 100%;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  outline: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Hide arrow keys for Chrome, Safari, Edge, Opera */
+.qty-input-custom::-webkit-outer-spin-button,
+.qty-input-custom::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Hide arrow keys for Firefox */
+.qty-input-custom[type=number] {
+  -moz-appearance: textfield;
 }
 </style>

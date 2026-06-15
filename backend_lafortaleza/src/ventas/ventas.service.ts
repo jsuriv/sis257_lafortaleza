@@ -9,6 +9,9 @@ import { Cliente } from '../clientes/entities/cliente.entity';
 import { CreateVentaDto } from './dto/create-venta.dto';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { Usuario } from '../usuarios/entities/usuario.entity';
+import { ComboProducto } from '../productos/entities/combo-producto.entity';
+import { Delivery } from './entities/delivery.entity';
+import { Caja } from '../cajas/entities/caja.entity';
 
 @Injectable()
 export class VentasService {
@@ -33,12 +36,12 @@ export class VentasService {
    */
   private async getConsumidorFinal(manager: any): Promise<Cliente> {
     let consumidor = await manager.findOne(Cliente, {
-      where: { ciNit: '0', nombre: 'Consumidor', apellido: 'Final' },
+      where: { ciNit: '0', nombre: 'Cliente', apellido: 'Ocasional' },
     });
     if (!consumidor) {
       consumidor = manager.create(Cliente, {
-        nombre: 'Consumidor',
-        apellido: 'Final',
+        nombre: 'Cliente',
+        apellido: 'Ocasional',
         ciNit: '0',
         estado: true,
       });
@@ -53,7 +56,18 @@ export class VentasService {
     await queryRunner.startTransaction();
 
     try {
-      const { detalles, pagos, clienteId, comprobanteQr, ...ventaData } = createVentaDto;
+      const {
+        detalles,
+        pagos,
+        clienteId,
+        comprobanteQr,
+        tipoEntrega,
+        direccion,
+        referencia,
+        telefonoContacto,
+        costoDelivery,
+        ...ventaData
+      } = createVentaDto;
 
       // Resolver cliente: si no se provee clienteId, usar Consumidor Final
       let resolvedClienteId: number;
@@ -62,6 +76,17 @@ export class VentasService {
       } else {
         const consumidor = await this.getConsumidorFinal(queryRunner.manager);
         resolvedClienteId = consumidor.id;
+      }
+
+      // Buscar caja activa para el usuario autenticado
+      let resolvedCajaId: number | null = null;
+      if (usuarioAutenticado) {
+        const activeCaja = await queryRunner.manager.findOne(Caja, {
+          where: { usuarioId: usuarioAutenticado.id, estado: 'Abierta' },
+        });
+        if (activeCaja) {
+          resolvedCajaId = activeCaja.id;
+        }
       }
 
       // Validar stock y calcular total
@@ -73,14 +98,42 @@ export class VentasService {
         if (!producto) {
           throw new NotFoundException(`Producto con ID ${det.productoId} no encontrado`);
         }
-        const tipoVenta = det.tipoVenta || 'Unidad';
-        const unidadesPorCaja = producto.unidadesPorCaja || 1;
-        const unidadesAComprar = tipoVenta === 'Caja' ? det.cantidad * unidadesPorCaja : det.cantidad;
 
-        if (Number(producto.stock) < unidadesAComprar) {
-          throw new BadRequestException(
-            `Stock insuficiente para "${producto.nombre}". Disponible: ${producto.stock}, Solicitado: ${unidadesAComprar} (en ${tipoVenta}s)`,
-          );
+        if (producto.esCombo) {
+          // Validar subproductos (soportando componentes personalizados enviados desde el frontend)
+          const comboItems = det.componentes && det.componentes.length > 0
+            ? det.componentes
+            : await queryRunner.manager.find(ComboProducto, {
+                where: { comboId: producto.id }
+              });
+          if (comboItems.length === 0) {
+            throw new BadRequestException(`El combo "${producto.nombre}" no tiene productos asociados.`);
+          }
+          for (const item of comboItems) {
+            const subProduct = await queryRunner.manager.findOne(Producto, {
+              where: { id: item.productoId }
+            });
+            if (!subProduct) {
+              throw new NotFoundException(`Subproducto con ID ${item.productoId} del combo no encontrado`);
+            }
+            const subUnidadesAComprar = item.cantidad * det.cantidad;
+            if (Number(subProduct.stock) < subUnidadesAComprar) {
+              throw new BadRequestException(
+                `Stock insuficiente para el componente "${subProduct.nombre}" del combo "${producto.nombre}". Disponible: ${subProduct.stock}, Requerido: ${subUnidadesAComprar}`
+              );
+            }
+          }
+        } else {
+          // Validar producto base
+          const tipoVenta = det.tipoVenta || 'Unidad';
+          const unidadesPorCaja = producto.unidadesPorCaja || 1;
+          const unidadesAComprar = tipoVenta === 'Caja' ? det.cantidad * unidadesPorCaja : det.cantidad;
+
+          if (Number(producto.stock) < unidadesAComprar) {
+            throw new BadRequestException(
+              `Stock insuficiente para "${producto.nombre}". Disponible: ${producto.stock}, Solicitado: ${unidadesAComprar} (en ${tipoVenta}s)`,
+            );
+          }
         }
         total += det.cantidad * det.precio;
       }
@@ -91,14 +144,26 @@ export class VentasService {
         clienteId: resolvedClienteId,
         total,
         fecha: new Date(),
-<<<<<<< HEAD
-        estado: 'Confirmada',
-=======
         estado: (ventaData.estado as EstadoVenta) || 'Confirmada',
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
-        comprobanteQr: comprobanteQr || null,
+        comprobanteQr: comprobanteQr || undefined,
+        tipoEntrega: tipoEntrega || 'Tienda',
+        direccionEntrega: tipoEntrega === 'Delivery' ? (direccion || undefined) : undefined,
+        cajaId: resolvedCajaId,
       });
       const savedVenta = await queryRunner.manager.save(venta);
+
+      // Crear delivery si corresponde
+      if (tipoEntrega === 'Delivery') {
+        const delivery = queryRunner.manager.create(Delivery, {
+          ventaId: savedVenta.id,
+          direccion: direccion || 'Sin dirección',
+          referencia: referencia || undefined,
+          telefonoContacto: telefonoContacto || '00000000',
+          costoDelivery: costoDelivery !== undefined ? costoDelivery : 10.00,
+          estado: 'Pendiente',
+        });
+        await queryRunner.manager.save(delivery);
+      }
 
       // Crear detalles y descontar stock
       for (const det of detalles) {
@@ -110,6 +175,7 @@ export class VentasService {
           precio: det.precio,
           subtotal,
           tipoVenta: det.tipoVenta || 'Unidad',
+          conHielo: det.conHielo || false,
         });
         await queryRunner.manager.save(detalle);
 
@@ -117,13 +183,36 @@ export class VentasService {
         const producto = await queryRunner.manager.findOne(Producto, {
           where: { id: det.productoId },
         });
-        
-        const tipoVenta = det.tipoVenta || 'Unidad';
-        const unidadesPorCaja = producto!.unidadesPorCaja || 1;
-        const unidadesARestar = tipoVenta === 'Caja' ? det.cantidad * unidadesPorCaja : det.cantidad;
 
-        producto!.stock = Number(producto!.stock) - unidadesARestar;
-        await queryRunner.manager.save(producto!);
+        if (producto!.esCombo) {
+          // Descontar de subproductos
+          const comboItems = det.componentes && det.componentes.length > 0
+            ? det.componentes
+            : await queryRunner.manager.find(ComboProducto, {
+                where: { comboId: producto!.id }
+              });
+          for (const item of comboItems) {
+            const subProduct = await queryRunner.manager.findOne(Producto, {
+              where: { id: item.productoId }
+            });
+            if (subProduct) {
+              const subUnidadesARestar = item.cantidad * det.cantidad;
+              subProduct.stock = Number(subProduct.stock) - subUnidadesARestar;
+              await queryRunner.manager.save(subProduct);
+            }
+          }
+          // También descontamos del combo en sí para mantener coherencia si se muestra stock del combo
+          producto!.stock = Number(producto!.stock) - det.cantidad;
+          await queryRunner.manager.save(producto!);
+        } else {
+          // Descontar del producto base
+          const tipoVenta = det.tipoVenta || 'Unidad';
+          const unidadesPorCaja = producto!.unidadesPorCaja || 1;
+          const unidadesARestar = tipoVenta === 'Caja' ? det.cantidad * unidadesPorCaja : det.cantidad;
+
+          producto!.stock = Number(producto!.stock) - unidadesARestar;
+          await queryRunner.manager.save(producto!);
+        }
       }
 
       // Registrar pagos

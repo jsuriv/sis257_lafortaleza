@@ -48,18 +48,39 @@ export class Producto {
   @Column({ default: true })
   estado: boolean;
 
-<<<<<<< HEAD
-=======
   @Column({ name: 'unidad_medida', length: 50, default: 'Unidad' })
   unidadMedida: string;
 
-  @Column({ name: 'unidades_por_caja', type: 'int', nullable: true })
+  @Column({ name: 'vende_por_unidad', type: 'boolean', nullable: true, default: true })
+  vendePorUnidad: boolean;
+
+  @Column({ name: 'vende_por_caja', type: 'boolean', nullable: true, default: true })
+  vendePorCaja: boolean;
+
+  @Column({ name: 'unidades_por_caja', type: 'int', nullable: true, default: 6 })
   unidadesPorCaja: number;
 
   @Column({ name: 'precio_caja', type: 'decimal', precision: 10, scale: 2, nullable: true })
   precioCaja: number;
 
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
+  @Column({ name: 'precio_compra_unidad', type: 'decimal', precision: 10, scale: 2, nullable: true, default: 0 })
+  precioCompraUnidad: number;
+
+  @Column({ name: 'precio_compra_caja', type: 'decimal', precision: 10, scale: 2, nullable: true, default: 0 })
+  precioCompraCaja: number;
+
+  @Column({ name: 'precio_venta_unidad', type: 'decimal', precision: 10, scale: 2, nullable: true, default: 0 })
+  precioVentaUnidad: number;
+
+  @Column({ name: 'precio_venta_caja', type: 'decimal', precision: 10, scale: 2, nullable: true, default: 0 })
+  precioVentaCaja: number;
+
+  @Column({ name: 'tipo_bebida', length: 50, default: 'Alcoholica' })
+  tipoBebida: string; // 'Alcoholica' | 'No Alcoholica'
+
+  @Column({ name: 'es_combo', type: 'boolean', default: false })
+  esCombo: boolean;
+
   @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
   fechaCreacion: Date;
 

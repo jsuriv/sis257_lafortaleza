@@ -18,6 +18,9 @@ import { MetodoPago } from './metodos-pago/entities/metodo-pago.entity';
 import { Pago } from './pagos/entities/pago.entity';
 import { Auditoria } from './auditoria/entities/auditoria.entity';
 import { Promocion } from './promociones/entities/promocion.entity';
+import { ComboProducto } from './productos/entities/combo-producto.entity';
+import { Delivery } from './ventas/entities/delivery.entity';
+import { Caja } from './cajas/entities/caja.entity';
 
 // Módulos
 import { RolesModule } from './roles/roles.module';
@@ -34,6 +37,7 @@ import { AuthModule } from './auth/auth.module';
 import { SeederModule } from './seeders/seeder.module';
 import { AuditoriaModule } from './auditoria/auditoria.module';
 import { PromocionesModule } from './promociones/promociones.module';
+import { CajasModule } from './cajas/cajas.module';
 
 @Module({
   imports: [
@@ -48,7 +52,7 @@ import { PromocionesModule } from './promociones/promociones.module';
       entities: [
         Rol, Usuario, Categoria, Marca, Proveedor, Cliente,
         Producto, Compra, DetalleCompra, Venta, DetalleVenta,
-        MetodoPago, Pago, Auditoria, Promocion,
+        MetodoPago, Pago, Auditoria, Promocion, ComboProducto, Delivery, Caja,
       ],
       synchronize: true, // Solo para desarrollo
       logging: false,
@@ -68,6 +72,7 @@ import { PromocionesModule } from './promociones/promociones.module';
     SeederModule,
     AuditoriaModule,
     PromocionesModule,
+    CajasModule,
   ],
 })
 export class AppModule {}

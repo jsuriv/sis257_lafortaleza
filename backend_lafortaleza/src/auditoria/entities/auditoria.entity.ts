@@ -3,6 +3,8 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
@@ -13,8 +15,14 @@ export class Auditoria {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'fecha' })
-  fecha: Date;
+  @CreateDateColumn({ type: 'timestamp', name: 'fecha_creacion' })
+  fechaCreacion: Date;
+
+  @UpdateDateColumn({ type: 'timestamp', name: 'fecha_modificacion' })
+  fechaModificacion: Date;
+
+  @DeleteDateColumn({ type: 'timestamp', name: 'fecha_eliminacion' })
+  fechaEliminacion: Date;
 
   @Column({ name: 'usuario_nombre', length: 255 })
   usuarioNombre: string;

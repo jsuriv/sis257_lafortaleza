@@ -51,7 +51,7 @@
                 <button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--text-secondary); border-radius:6px;" @click="showDetail(v)" title="Ver detalle">
                   <i class="bi bi-eye"></i>
                 </button>
-                <button v-if="!isVendedor && v.estado !== 'Anulada'" class="btn btn-sm" style="border:1px solid rgba(239,68,68,0.3); color:var(--danger); border-radius:6px;" @click="anularVenta(v)" title="Anular venta">
+                <button v-if="v.estado !== 'Anulada'" class="btn btn-sm" style="border:1px solid rgba(239,68,68,0.3); color:var(--danger); border-radius:6px;" @click="anularVenta(v)" title="Anular venta">
                   <i class="bi bi-x-circle"></i>
                 </button>
               </div>
@@ -121,8 +121,8 @@
                 </template>
               </div>
 
-              <!-- Cambiar Estado (solo Admin) -->
-              <div v-if="!isVendedor && selectedVenta.estado !== 'Anulada'" class="mt-3 d-flex gap-2 flex-wrap">
+              <!-- Cambiar Estado -->
+              <div v-if="selectedVenta.estado !== 'Anulada'" class="mt-3 d-flex gap-2 flex-wrap">
                 <button
                   v-for="e in estadosBotones"
                   :key="e.key"
@@ -149,15 +149,14 @@
               </thead>
               <tbody>
                 <tr v-for="d in selectedVenta.detalles" :key="d.id">
-<<<<<<< HEAD
-                  <td>{{ d.producto?.nombre }}</td>
-=======
                   <td>
                     {{ d.producto?.nombre }}
                     <span class="text-secondary" style="font-size:0.75rem;">({{ d.tipoVenta || 'Unidad' }})</span>
                   </td>
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
-                  <td>{{ d.cantidad }}</td>
+                  <td>
+                    {{ d.cantidad }}
+                    <small class="text-secondary" v-if="d.tipoVenta === 'Caja'">({{ d.cantidad * (d.producto?.unidadesPorCaja || 6) }} u)</small>
+                  </td>
                   <td>Bs. {{ Number(d.precio).toFixed(2) }}</td>
                   <td class="text-gold fw-bold">Bs. {{ Number(d.subtotal).toFixed(2) }}</td>
                 </tr>

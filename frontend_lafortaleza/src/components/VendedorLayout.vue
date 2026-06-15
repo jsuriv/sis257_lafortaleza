@@ -15,11 +15,17 @@
         <router-link to="/vendedor/dashboard" class="nav-link" @click="sidebarOpen = false">
           <i class="bi bi-grid-1x2-fill"></i> Dashboard
         </router-link>
+        <router-link to="/vendedor/caja" class="nav-link" @click="sidebarOpen = false">
+          <i class="bi bi-cash-coin"></i> Caja (Arqueo)
+        </router-link>
         <router-link to="/vendedor/ventas/nueva" class="nav-link nav-link-pos" @click="sidebarOpen = false">
           <i class="bi bi-cart-plus-fill"></i> Nueva Venta
         </router-link>
         <router-link to="/vendedor/ventas" class="nav-link" @click="sidebarOpen = false">
           <i class="bi bi-receipt"></i> Mis Ventas
+        </router-link>
+        <router-link to="/vendedor/delivery" class="nav-link" @click="sidebarOpen = false">
+          <i class="bi bi-geo-alt-fill"></i> Mis Entregas (Delivery)
         </router-link>
 
         <div class="nav-section-title">Catálogo</div>
@@ -55,9 +61,22 @@
           </button>
         </div>
       </header>
-      <div class="content-area">
+      <div class="content-area flex-grow-1">
         <router-view />
       </div>
+      <!-- Footer del Sistema -->
+      <footer class="system-footer text-center py-3 border-top" style="border-color: var(--border-color) !important; background-color: var(--bg-card); font-size: 0.72rem; color: var(--text-secondary);">
+        <div class="container-fluid">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <span>&copy; 2026 LA FORTALEZA. Todos los derechos reservados.</span>
+            <span>
+              <i class="bi bi-geo-alt-fill text-gold me-1"></i>Calle El Paraiso 123, Sucre - Bolivia &nbsp;|&nbsp;
+              <i class="bi bi-telephone-fill text-gold me-1"></i>+591 75781303 &nbsp;|&nbsp;
+              <i class="bi bi-envelope-fill text-gold me-1"></i>contacto@lafortaleza.com.bo
+            </span>
+          </div>
+        </div>
+      </footer>
     </div>
 
     <!-- Mobile Backdrop -->

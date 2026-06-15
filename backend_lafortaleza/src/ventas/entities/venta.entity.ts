@@ -8,11 +8,13 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  OneToOne,
 } from 'typeorm';
 import { Cliente } from '../../clientes/entities/cliente.entity';
 import { Usuario } from '../../usuarios/entities/usuario.entity';
 import { DetalleVenta } from '../../detalles-venta/entities/detalle-venta.entity';
 import { Pago } from '../../pagos/entities/pago.entity';
+import { Delivery } from './delivery.entity';
 
 export type EstadoVenta = 'Pendiente' | 'Confirmada' | 'Entregada' | 'Anulada';
 
@@ -37,12 +39,18 @@ export class Venta {
   @Column({ name: 'comprobante_qr', type: 'varchar', length: 500, nullable: true })
   comprobanteQr: string | null;
 
-<<<<<<< HEAD
-=======
   @Column({ name: 'direccion_entrega', type: 'varchar', length: 500, nullable: true })
   direccionEntrega: string | null;
 
->>>>>>> ab793257ba3493a6fd446597f722a9acc7b86b05
+  @Column({ name: 'tipo_entrega', type: 'varchar', length: 50, default: 'Tienda' })
+  tipoEntrega: string; // 'Tienda' | 'Delivery'
+
+  @OneToOne(() => Delivery, (delivery) => delivery.venta, { nullable: true, cascade: true })
+  delivery: Delivery;
+
+  @Column({ name: 'caja_id', type: 'integer', nullable: true })
+  cajaId: number | null;
+
   @CreateDateColumn({ name: 'fecha_creacion', type: 'timestamp' })
   fechaCreacion: Date;
 
