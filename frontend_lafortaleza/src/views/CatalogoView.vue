@@ -663,9 +663,9 @@
                       </td>
                       <td>
                         <div class="d-flex align-items-center justify-content-center gap-2">
-                          <button class="btn btn-sm btn-outline-secondary" @click="decreaseQty(index)">-</button>
-                          <span class="fw-semibold">{{ item.cantidad }}</span>
-                          <button class="btn btn-sm btn-outline-secondary" @click="increaseQty(index)">+</button>
+                          <button class="btn-qty" @click="decreaseQty(index)">-</button>
+                          <span class="qty-display">{{ item.cantidad }}</span>
+                          <button class="btn-qty" @click="increaseQty(index)">+</button>
                         </div>
                       </td>
                       <td class="text-end fw-bold">Bs. {{ (item.cantidad * item.precio).toFixed(2) }}</td>
@@ -699,9 +699,21 @@
                   <!-- Si es Delivery, pedir datos -->
                   <div v-if="cartTipoEntrega === 'Delivery'" class="p-3 rounded border border-secondary" style="background: rgba(0, 0, 0, 0.2);">
                     <div class="row g-2">
+                      <div class="col-12 mb-3">
+                        <label class="form-label mb-1" style="font-size: 0.75rem; color: var(--gold);"><i class="bi bi-map me-1"></i> Seleccionar Ubicación en el Mapa (Sucre)</label>
+                        <div id="map-cart" style="height: 220px; border-radius: 8px; border: 1px solid var(--border-color); z-index: 1;"></div>
+                        <small class="text-secondary" style="font-size: 0.7rem; display: block; margin-top: 4px;">Haz clic en el mapa de Sucre o arrastra el marcador para autocompletar tu dirección exacta.</small>
+                      </div>
                       <div class="col-12">
                         <label class="form-label mb-1" style="font-size: 0.75rem;">Dirección de Entrega *</label>
-                        <input type="text" class="form-control form-control-sm" placeholder="Ej: Av. Las Americas #123" v-model="cartDireccion" required />
+                        <div class="input-group input-group-sm">
+                          <input type="text" class="form-control form-control-sm" placeholder="Ej: Av. Las Americas #123" v-model="cartDireccion" @keyup.enter="forwardGeocodeCart" required />
+                          <button class="btn btn-outline-secondary d-flex align-items-center gap-1" type="button" @click="forwardGeocodeCart" title="Buscar dirección en el mapa">
+                            <i class="bi bi-search"></i>
+                            <span class="d-none d-md-inline">Buscar</span>
+                          </button>
+                        </div>
+                        <small class="text-secondary" style="font-size: 0.68rem; display: block; margin-top: 2px;">Escribe una dirección y presiona Enter o haz clic en Buscar para ubicarla en el mapa.</small>
                       </div>
                       <div class="col-12">
                         <label class="form-label mb-1" style="font-size: 0.75rem;">Referencia de Ubicación</label>
@@ -809,7 +821,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import http from '@/plugins/axios'
 import { Modal } from 'bootstrap'
 import Swal from 'sweetalert2'
@@ -870,6 +882,11 @@ const cartReferencia = ref('')
 const cartTelefonoContacto = ref('')
 const cartCostoDelivery = ref(10.00)
 
+const cartLat = ref<number>(-19.0429)
+const cartLng = ref<number>(-65.2554)
+let cartMapInstance: any = null
+let cartMarkerInstance: any = null
+
 const pedidos = ref<any[]>([])
 const loadingHistory = ref(false)
 const historyModalRef = ref<HTMLElement>()
@@ -925,7 +942,19 @@ const testimonials = [
 
 onMounted(async () => {
   if (detailsModalRef.value) detailsModal = new Modal(detailsModalRef.value)
-  if (cartModalRef.value) cartModal = new Modal(cartModalRef.value)
+  if (cartModalRef.value) {
+    cartModal = new Modal(cartModalRef.value)
+    cartModalRef.value.addEventListener('shown.bs.modal', () => {
+      if (cartTipoEntrega.value === 'Delivery') {
+        nextTick(() => {
+          initCartMap()
+        })
+      }
+    })
+    cartModalRef.value.addEventListener('hidden.bs.modal', () => {
+      destroyCartMap()
+    })
+  }
   if (historyModalRef.value) historyModal = new Modal(historyModalRef.value)
   
   try {
@@ -1103,6 +1132,144 @@ function handleLogout() {
   cartDireccion.value = ''
   cartReferencia.value = ''
   cartTelefonoContacto.value = ''
+}
+
+watch(cartTipoEntrega, (newVal) => {
+  if (newVal === 'Delivery') {
+    nextTick(() => {
+      initCartMap()
+    })
+  } else {
+    destroyCartMap()
+  }
+})
+
+function initCartMap() {
+  const el = document.getElementById('map-cart')
+  if (!el || cartMapInstance) return
+
+  const defaultIcon = (window as any).L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  })
+
+  cartMapInstance = (window as any).L.map('map-cart', {
+    zoomControl: true,
+    attributionControl: false
+  }).setView([cartLat.value, cartLng.value], 14);
+
+  (window as any).L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19
+  }).addTo(cartMapInstance)
+
+  cartMarkerInstance = (window as any).L.marker([cartLat.value, cartLng.value], {
+    draggable: true,
+    icon: defaultIcon
+  }).addTo(cartMapInstance)
+
+  cartMarkerInstance.on('dragend', async () => {
+    const latLng = cartMarkerInstance.getLatLng()
+    cartLat.value = latLng.lat
+    cartLng.value = latLng.lng
+    await updateCartAddressFromCoords(latLng.lat, latLng.lng)
+  })
+
+  cartMapInstance.on('click', async (e: any) => {
+    const latLng = e.latlng
+    cartMarkerInstance.setLatLng(latLng)
+    cartLat.value = latLng.lat
+    cartLng.value = latLng.lng
+    await updateCartAddressFromCoords(latLng.lat, latLng.lng)
+  })
+  
+  setTimeout(() => {
+    if (cartMapInstance) cartMapInstance.invalidateSize()
+  }, 300)
+}
+
+function destroyCartMap() {
+  if (cartMapInstance) {
+    cartMapInstance.remove()
+    cartMapInstance = null
+    cartMarkerInstance = null
+  }
+}
+
+async function updateCartAddressFromCoords(lat: number, lng: number) {
+  const address = await reverseGeocode(lat, lng)
+  if (address) {
+    cartDireccion.value = address
+  }
+}
+
+async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+      headers: {
+        'Accept-Language': 'es',
+        'User-Agent': 'LaFortaleza/1.0'
+      }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      return data.display_name || null
+    }
+  } catch (e) {
+    console.error('Error reverse geocoding:', e)
+  }
+  return null
+}
+
+async function forwardGeocodeCart() {
+  const query = cartDireccion.value.trim()
+  if (!query || query.length < 3) return
+  try {
+    const searchQuery = query.toLowerCase().includes('sucre') ? query : `${query}, Sucre, Bolivia`
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&viewbox=-65.35,-19.12,-65.18,-18.97&bounded=1&limit=1`, {
+      headers: {
+        'Accept-Language': 'es',
+        'User-Agent': 'LaFortaleza/1.0'
+      }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.length > 0) {
+        const lat = parseFloat(data[0].lat)
+        const lng = parseFloat(data[0].lon)
+        cartLat.value = lat
+        cartLng.value = lng
+        if (cartMarkerInstance) cartMarkerInstance.setLatLng([lat, lng])
+        if (cartMapInstance) cartMapInstance.setView([lat, lng], 16)
+        cartDireccion.value = data[0].display_name
+      } else {
+        // Try unbounded search within Sucre
+        const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`, {
+          headers: {
+            'Accept-Language': 'es',
+            'User-Agent': 'LaFortaleza/1.0'
+          }
+        })
+        if (res2.ok) {
+          const data2 = await res2.json()
+          if (data2.length > 0) {
+            const lat = parseFloat(data2[0].lat)
+            const lng = parseFloat(data2[0].lon)
+            cartLat.value = lat
+            cartLng.value = lng
+            if (cartMarkerInstance) cartMarkerInstance.setLatLng([lat, lng])
+            if (cartMapInstance) cartMapInstance.setView([lat, lng], 16)
+            cartDireccion.value = data2[0].display_name
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error forward geocoding:', e)
+  }
 }
 
 // Shopping Cart Actions
@@ -1429,6 +1596,8 @@ async function confirmarCompra() {
       referencia: cartTipoEntrega.value === 'Delivery' ? cartReferencia.value.trim() : undefined,
       telefonoContacto: cartTipoEntrega.value === 'Delivery' ? cartTelefonoContacto.value.trim() : undefined,
       costoDelivery: cartTipoEntrega.value === 'Delivery' ? cartCostoDelivery.value : undefined,
+      latitud: cartTipoEntrega.value === 'Delivery' ? cartLat.value : undefined,
+      longitud: cartTipoEntrega.value === 'Delivery' ? cartLng.value : undefined,
       detalles: cart.value.map(i => ({
         productoId: i.productoId,
         cantidad: i.cantidad,
@@ -1500,6 +1669,7 @@ onUnmounted(() => {
   if (detailsModal) detailsModal.hide()
   if (cartModal) cartModal.hide()
   if (historyModal) historyModal.hide()
+  destroyCartMap()
 
   const backdrops = document.querySelectorAll('.modal-backdrop')
   backdrops.forEach(el => el.remove())

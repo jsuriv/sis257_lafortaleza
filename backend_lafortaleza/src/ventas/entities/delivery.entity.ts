@@ -35,6 +35,12 @@ export class Delivery {
   @Column({ name: 'costo_delivery', type: 'decimal', precision: 10, scale: 2, default: 10.00 })
   costoDelivery: number;
 
+  @Column({ name: 'latitud', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  latitud: number | null;
+
+  @Column({ name: 'longitud', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  longitud: number | null;
+
   @Column({
     type: 'varchar',
     length: 50,

@@ -66,6 +66,8 @@ export class VentasService {
         referencia,
         telefonoContacto,
         costoDelivery,
+        latitud,
+        longitud,
         ...ventaData
       } = createVentaDto;
 
@@ -160,6 +162,8 @@ export class VentasService {
           referencia: referencia || undefined,
           telefonoContacto: telefonoContacto || '00000000',
           costoDelivery: costoDelivery !== undefined ? costoDelivery : 10.00,
+          latitud: latitud || null,
+          longitud: longitud || null,
           estado: 'Pendiente',
         });
         await queryRunner.manager.save(delivery);

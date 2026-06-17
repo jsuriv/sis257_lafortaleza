@@ -166,6 +166,11 @@
               <div class="small text-secondary mb-1" v-if="selectedDelivery.referencia"><strong>Referencia:</strong> {{ selectedDelivery.referencia }}</div>
               <div class="small text-secondary mb-1"><strong>Teléfono:</strong> {{ selectedDelivery.telefonoContacto }}</div>
               <div class="small text-secondary mb-1"><strong>Costo Delivery:</strong> Bs. {{ Number(selectedDelivery.costoDelivery).toFixed(2) }}</div>
+              
+              <!-- Map showing the exact delivery pin -->
+              <div v-if="selectedDelivery.latitud && selectedDelivery.longitud" class="mt-3">
+                <div id="map-track" style="height: 180px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); z-index: 1;"></div>
+              </div>
             </div>
 
             <!-- Order Products -->
@@ -246,7 +251,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import http from '@/plugins/axios'
 import Swal from 'sweetalert2'
 import { useAuthStore } from '@/stores/auth'
@@ -257,6 +262,8 @@ const authStore = useAuthStore()
 const deliveries = ref<any[]>([])
 const loading = ref(false)
 const selectedDelivery = ref<any>(null)
+let trackingMapInstance: any = null
+let trackingMarkerInstance: any = null
 
 // Timeline steps
 const timelineSteps = [
@@ -416,6 +423,70 @@ function getStateBadgeClass(status: string) {
     case 'Entregado': return 'bg-success bg-opacity-20 text-success border border-success-subtle'
     case 'Cancelado': return 'bg-danger bg-opacity-20 text-danger border border-danger-subtle'
     default: return 'bg-secondary text-light'
+  }
+}
+
+watch(selectedDelivery, (newVal) => {
+  if (newVal && newVal.latitud && newVal.longitud) {
+    nextTick(() => {
+      initTrackingMap(Number(newVal.latitud), Number(newVal.longitud), newVal.direccion)
+    })
+  } else {
+    destroyTrackingMap()
+  }
+})
+
+onUnmounted(() => {
+  destroyTrackingMap()
+})
+
+function initTrackingMap(lat: number, lng: number, address: string) {
+  const el = document.getElementById('map-track')
+  if (!el) return
+
+  if (trackingMapInstance) {
+    trackingMapInstance.setView([lat, lng], 15)
+    if (trackingMarkerInstance) {
+      trackingMarkerInstance.setLatLng([lat, lng])
+      trackingMarkerInstance.setPopupContent(address)
+    }
+    return
+  }
+
+  const defaultIcon = (window as any).L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  })
+
+  trackingMapInstance = (window as any).L.map('map-track', {
+    zoomControl: true,
+    attributionControl: false
+  }).setView([lat, lng], 15)
+
+  (window as any).L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19
+  }).addTo(trackingMapInstance)
+
+  trackingMarkerInstance = (window as any).L.marker([lat, lng], {
+    icon: defaultIcon
+  }).addTo(trackingMapInstance)
+    .bindPopup(address)
+    .openPopup()
+
+  setTimeout(() => {
+    if (trackingMapInstance) trackingMapInstance.invalidateSize()
+  }, 300)
+}
+
+function destroyTrackingMap() {
+  if (trackingMapInstance) {
+    trackingMapInstance.remove()
+    trackingMapInstance = null
+    trackingMarkerInstance = null
   }
 }
 

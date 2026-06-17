@@ -98,9 +98,21 @@
           <!-- Si selecciona Delivery solicitar Dirección, Referencia, Teléfono -->
           <div v-if="tipoEntrega === 'Delivery'" class="p-3 rounded border" style="background: rgba(22, 22, 22, 0.4); border-color: rgba(212,175,55,0.15) !important;">
             <div class="row g-2">
+              <div class="col-12 mb-3">
+                <label class="form-label mb-1" style="font-size: 0.75rem; color: var(--gold);"><i class="bi bi-map me-1"></i> Seleccionar Ubicación en el Mapa (Sucre)</label>
+                <div id="map-pos" style="height: 220px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); z-index: 1;"></div>
+                <small class="text-secondary" style="font-size: 0.7rem; display: block; margin-top: 4px;">Haz clic en el mapa de Sucre o arrastra el marcador para autocompletar la dirección exacta.</small>
+              </div>
               <div class="col-12">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">Dirección *</label>
-                <input type="text" class="form-control form-control-sm" placeholder="Ej: Av. Las Americas #123" v-model="direccion" required />
+                <div class="input-group input-group-sm">
+                  <input type="text" class="form-control form-control-sm" placeholder="Ej: Av. Las Americas #123" v-model="direccion" @keyup.enter="forwardGeocodePos" required />
+                  <button class="btn btn-outline-secondary d-flex align-items-center gap-1" type="button" @click="forwardGeocodePos" title="Buscar dirección en el mapa">
+                    <i class="bi bi-search"></i>
+                    <span class="d-none d-md-inline">Buscar</span>
+                  </button>
+                </div>
+                <small class="text-secondary" style="font-size: 0.68rem; display: block; margin-top: 2px;">Escribe una dirección y presiona Enter o clic en Buscar para ubicarla en el mapa.</small>
               </div>
               <div class="col-12">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">Referencia</label>
@@ -183,9 +195,9 @@
             <div style="flex:1; min-width:0;">
               <div class="fw-semibold text-truncate" style="font-size:0.85rem;">{{ item.nombre }} <span class="text-secondary fw-normal" style="font-size:0.75rem;">({{ item.tipoVenta }})</span></div>
               <div class="d-flex align-items-center gap-2 mt-1">
-                <button class="btn btn-sm" style="padding:1px 7px; border:1px solid var(--border-color); border-radius:5px; color:var(--text-secondary);" @click="item.cantidad > 1 ? item.cantidad-- : removeItem(i)">-</button>
-                <span style="font-size:0.85rem; min-width:20px; text-align:center;">{{ item.cantidad }}</span>
-                <button class="btn btn-sm" style="padding:1px 7px; border:1px solid var(--border-color); border-radius:5px; color:var(--text-secondary);" @click="increaseQty(i)">+</button>
+                <button class="btn-qty" @click="item.cantidad > 1 ? item.cantidad-- : removeItem(i)">-</button>
+                <span class="qty-display">{{ item.cantidad }}</span>
+                <button class="btn-qty" @click="increaseQty(i)">+</button>
                 <span class="text-secondary" style="font-size:0.78rem;">× Bs. {{ Number(item.precio).toFixed(2) }}</span>
                 <span class="text-secondary" style="font-size:0.7rem;" v-if="item.tipoVenta === 'Caja'">(Bs. {{ (Number(item.precio) / item.factorUnidades).toFixed(2) }} c/u)</span>
               </div>
@@ -215,7 +227,7 @@
               </div>
               <div class="col-6">
                 <label class="form-label" style="font-size:0.8rem;">Cambio</label>
-                <div class="form-control form-control-sm text-end fw-bold" :class="cambio >= 0 ? 'text-success' : 'text-danger'" style="background:rgba(0,0,0,0.1); border-color:var(--border-color);">
+                <div class="form-control form-control-sm d-flex align-items-center justify-content-end fw-bold" :class="cambio >= 0 ? 'text-success' : 'text-danger'" style="background:rgba(0,0,0,0.1); border-color:var(--border-color);">
                   Bs. {{ cambio.toFixed(2) }}
                 </div>
               </div>
@@ -232,7 +244,7 @@
             <!-- QR placard presentation -->
             <div v-if="isQrSelected" class="mb-3 p-3 rounded text-center animate-fade-in" style="background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.15);">
               <label class="form-label text-gold d-block fw-bold mb-2">Escanea el QR para Pagar</label>
-              <div class="bg-white p-2 rounded d-inline-block shadow-sm" style="max-width:180px;">
+              <div class="bg-white p-2 rounded d-inline-block shadow-sm cursor-zoom-in" style="max-width:180px; cursor: zoom-in;" @click="openQrModal" title="Clic para agrandar">
                 <img :src="staticQrUrl" class="w-100 rounded" style="max-height: 160px; object-fit: contain;" alt="QR de Pago" />
               </div>
               <p class="text-secondary small mt-2 mb-0">Monto exacto a transferir: <strong class="text-gold">Bs. {{ total.toFixed(2) }}</strong></p>
@@ -325,11 +337,30 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal para agrandar el QR -->
+    <div class="modal fade" id="modalQr" tabindex="-1" ref="modalQrRef">
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+        <div class="modal-content text-center">
+          <div class="modal-header">
+            <h5 class="modal-title text-gold w-100 text-center"><i class="bi bi-qr-code-scan me-2"></i>QR de Pago Ampliado</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="bg-white p-3 rounded d-inline-block shadow-lg mb-3">
+              <img :src="staticQrUrl" class="img-fluid rounded" style="max-height: 320px; object-fit: contain;" alt="QR de Pago Ampliado" />
+            </div>
+            <h4 class="text-gold fw-bold mb-2">Total: Bs. {{ total.toFixed(2) }}</h4>
+            <p class="text-secondary small mb-0">Escanea este código QR para transferir el monto exacto de forma segura.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { Modal } from 'bootstrap'
 import http from '@/plugins/axios'
 import Swal from 'sweetalert2'
@@ -361,6 +392,11 @@ const direccion = ref('')
 const referencia = ref('')
 const telefonoContacto = ref('')
 const costoDelivery = ref(10.00)
+
+const posLat = ref<number>(-19.0429)
+const posLng = ref<number>(-65.2554)
+let posMapInstance: any = null
+let posMarkerInstance: any = null
 const montoRecibido = ref<number | ''>('')
 
 
@@ -394,6 +430,14 @@ function triggerQrInput() {
 // Modal y Formulario de nuevo cliente
 const modalClienteRef = ref<HTMLElement | null>(null)
 let modalCliente: Modal | null = null
+
+// Modal de QR Ampliado
+const modalQrRef = ref<HTMLElement | null>(null)
+let modalQr: Modal | null = null
+
+function openQrModal() {
+  modalQr?.show()
+}
 
 const nuevoCliente = ref({
   nombre: '',
@@ -480,6 +524,9 @@ onMounted(async () => {
 
   if (modalClienteRef.value) {
     modalCliente = new Modal(modalClienteRef.value)
+  }
+  if (modalQrRef.value) {
+    modalQr = new Modal(modalQrRef.value)
   }
 })
 
@@ -610,6 +657,150 @@ function clearQr() {
   if (qrInput.value) qrInput.value.value = ''
 }
 
+onUnmounted(() => {
+  destroyPosMap()
+  modalCliente?.hide()
+  modalQr?.hide()
+})
+
+watch(tipoEntrega, (newVal) => {
+  if (newVal === 'Delivery') {
+    nextTick(() => {
+      initPosMap()
+    })
+  } else {
+    destroyPosMap()
+  }
+})
+
+function initPosMap() {
+  const el = document.getElementById('map-pos')
+  if (!el || posMapInstance) return
+
+  const defaultIcon = (window as any).L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  })
+
+  posMapInstance = (window as any).L.map('map-pos', {
+    zoomControl: true,
+    attributionControl: false
+  }).setView([posLat.value, posLng.value], 14);
+
+  (window as any).L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19
+  }).addTo(posMapInstance)
+
+  posMarkerInstance = (window as any).L.marker([posLat.value, posLng.value], {
+    draggable: true,
+    icon: defaultIcon
+  }).addTo(posMapInstance)
+
+  posMarkerInstance.on('dragend', async () => {
+    const latLng = posMarkerInstance.getLatLng()
+    posLat.value = latLng.lat
+    posLng.value = latLng.lng
+    await updatePosAddressFromCoords(latLng.lat, latLng.lng)
+  })
+
+  posMapInstance.on('click', async (e: any) => {
+    const latLng = e.latlng
+    posMarkerInstance.setLatLng(latLng)
+    posLat.value = latLng.lat
+    posLng.value = latLng.lng
+    await updatePosAddressFromCoords(latLng.lat, latLng.lng)
+  })
+  
+  setTimeout(() => {
+    if (posMapInstance) posMapInstance.invalidateSize()
+  }, 300)
+}
+
+function destroyPosMap() {
+  if (posMapInstance) {
+    posMapInstance.remove()
+    posMapInstance = null
+    posMarkerInstance = null
+  }
+}
+
+async function updatePosAddressFromCoords(lat: number, lng: number) {
+  const address = await reverseGeocode(lat, lng)
+  if (address) {
+    direccion.value = address
+  }
+}
+
+async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+      headers: {
+        'Accept-Language': 'es',
+        'User-Agent': 'LaFortaleza/1.0'
+      }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      return data.display_name || null
+    }
+  } catch (e) {
+    console.error('Error reverse geocoding:', e)
+  }
+  return null
+}
+
+async function forwardGeocodePos() {
+  const query = direccion.value.trim()
+  if (!query || query.length < 3) return
+  try {
+    const searchQuery = query.toLowerCase().includes('sucre') ? query : `${query}, Sucre, Bolivia`
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&viewbox=-65.35,-19.12,-65.18,-18.97&bounded=1&limit=1`, {
+      headers: {
+        'Accept-Language': 'es',
+        'User-Agent': 'LaFortaleza/1.0'
+      }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.length > 0) {
+        const lat = parseFloat(data[0].lat)
+        const lng = parseFloat(data[0].lon)
+        posLat.value = lat
+        posLng.value = lng
+        if (posMarkerInstance) posMarkerInstance.setLatLng([lat, lng])
+        if (posMapInstance) posMapInstance.setView([lat, lng], 16)
+        direccion.value = data[0].display_name
+      } else {
+        // Fallback: unbounded search appending Sucre
+        const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`, {
+          headers: {
+            'Accept-Language': 'es',
+            'User-Agent': 'LaFortaleza/1.0'
+          }
+        })
+        if (res2.ok) {
+          const data2 = await res2.json()
+          if (data2.length > 0) {
+            const lat = parseFloat(data2[0].lat)
+            const lng = parseFloat(data2[0].lon)
+            posLat.value = lat
+            posLng.value = lng
+            if (posMarkerInstance) posMarkerInstance.setLatLng([lat, lng])
+            if (posMapInstance) posMapInstance.setView([lat, lng], 16)
+            direccion.value = data2[0].display_name
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error forward geocoding:', e)
+  }
+}
+
 async function registrarVenta() {
   if (!cart.value.length) return
   processing.value = true
@@ -644,6 +835,8 @@ async function registrarVenta() {
       referencia: tipoEntrega.value === 'Delivery' ? referencia.value.trim() : undefined,
       telefonoContacto: tipoEntrega.value === 'Delivery' ? telefonoContacto.value.trim() : undefined,
       costoDelivery: tipoEntrega.value === 'Delivery' ? Number(costoDelivery.value) || 0 : undefined,
+      latitud: tipoEntrega.value === 'Delivery' ? posLat.value : undefined,
+      longitud: tipoEntrega.value === 'Delivery' ? posLng.value : undefined,
       detalles: cart.value.map(i => ({ productoId: i.productoId, cantidad: i.cantidad, precio: i.precio, tipoVenta: i.tipoVenta })),
       pagos: [{ metodoPagoId: metodoPagoId.value, monto: total.value, montoRecibido: Number(montoRecibido.value) || total.value, cambio: cambio.value > 0 ? cambio.value : 0 }],
     })

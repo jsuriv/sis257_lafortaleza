@@ -430,6 +430,108 @@ body {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+/* Altura compacta para controles pequeños fuera de input-group */
+.form-control-sm, .form-select-sm {
+  height: 36px !important;
+  font-size: 0.85rem !important;
+  border-radius: 8px !important;
+  padding: 0 12px !important;
+}
+
+/* Botones de cantidad compactos para el carrito */
+.btn-qty {
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  line-height: 1 !important;
+  border: 1px solid var(--border-color) !important;
+  background-color: transparent !important;
+  color: var(--text-secondary) !important;
+  transition: all 0.2s ease !important;
+}
+.btn-qty:hover {
+  background-color: var(--bg-hover) !important;
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+/* ── Ajustes de Input Groups (Alineación y Bordes) ── */
+.input-group .form-control,
+.input-group .form-select,
+.input-group .input-group-text,
+.input-group .btn {
+  height: 48px !important;
+  border-radius: 0 !important;
+}
+
+/* Redondear esquinas externas del primer elemento */
+.input-group > :first-child:not(.dropdown-menu),
+.input-group > .input-group-text:first-child,
+.input-group > .btn:first-child {
+  border-top-left-radius: 12px !important;
+  border-bottom-left-radius: 12px !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+/* Redondear esquinas externas del último elemento */
+.input-group > :last-child:not(.dropdown-toggle):not(.dropdown-menu),
+.input-group > .input-group-text:last-child,
+.input-group > .btn:last-child {
+  border-top-right-radius: 12px !important;
+  border-bottom-right-radius: 12px !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+/* Para Input Groups pequeños */
+.input-group-sm .form-control,
+.input-group-sm .form-select,
+.input-group-sm .input-group-text,
+.input-group-sm .btn {
+  height: 36px !important;
+  font-size: 0.85rem !important;
+  border-radius: 0 !important;
+}
+
+.input-group-sm > :first-child:not(.dropdown-menu),
+.input-group-sm > .input-group-text:first-child,
+.input-group-sm > .btn:first-child {
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.input-group-sm > :last-child:not(.dropdown-toggle):not(.dropdown-menu),
+.input-group-sm > .input-group-text:last-child,
+.input-group-sm > .btn:last-child {
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+/* Estilo del texto del grupo */
+.input-group-text {
+  background-color: var(--bg-dark) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+}
+.input-group-sm .input-group-text {
+  padding: 0 10px !important;
+}
+
+
 .form-control:focus, .form-select:focus {
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2) !important;

@@ -107,6 +107,16 @@ export class CreateVentaDto {
   @IsOptional()
   costoDelivery?: number;
 
+  @ApiPropertyOptional({ example: -19.0429, description: 'Latitud de la ubicación de entrega' })
+  @IsNumber()
+  @IsOptional()
+  latitud?: number;
+
+  @ApiPropertyOptional({ example: -65.2554, description: 'Longitud de la ubicación de entrega' })
+  @IsNumber()
+  @IsOptional()
+  longitud?: number;
+
   @ApiProperty({ type: [CreateDetalleVentaDto] })
   @IsArray()
   @ValidateNested({ each: true })
