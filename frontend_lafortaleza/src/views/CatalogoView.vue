@@ -809,7 +809,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import http from '@/plugins/axios'
 import { Modal } from 'bootstrap'
 import Swal from 'sweetalert2'
@@ -1158,6 +1158,7 @@ function addToCartCombined() {
       confirmButtonColor: 'var(--gold)',
     }).then((res) => {
       if (res.isConfirmed) {
+        if (detailsModal) detailsModal.hide()
         router.push('/login')
       }
     })
@@ -1266,6 +1267,7 @@ function addToCart(p: any, tipoVenta: string = 'Unidad', cantidad: number = 1, h
       confirmButtonColor: 'var(--gold)',
     }).then((res) => {
       if (res.isConfirmed) {
+        if (detailsModal) detailsModal.hide()
         router.push('/login')
       }
     })
@@ -1493,6 +1495,18 @@ function subscribeNewsletter() {
   })
   newsletterEmail.value = ''
 }
+
+onUnmounted(() => {
+  if (detailsModal) detailsModal.hide()
+  if (cartModal) cartModal.hide()
+  if (historyModal) historyModal.hide()
+
+  const backdrops = document.querySelectorAll('.modal-backdrop')
+  backdrops.forEach(el => el.remove())
+  document.body.classList.remove('modal-open')
+  document.body.style.overflow = ''
+  document.body.style.paddingRight = ''
+})
 </script>
 
 <style scoped>

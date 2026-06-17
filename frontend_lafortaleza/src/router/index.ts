@@ -103,4 +103,13 @@ router.beforeEach(async (to) => {
   return true
 })
 
+router.afterEach(() => {
+  // Remove Bootstrap modal backdrops and clean up body classes on route transitions
+  const backdrops = document.querySelectorAll('.modal-backdrop')
+  backdrops.forEach(el => el.remove())
+  document.body.classList.remove('modal-open')
+  document.body.style.overflow = ''
+  document.body.style.paddingRight = ''
+})
+
 export default router
