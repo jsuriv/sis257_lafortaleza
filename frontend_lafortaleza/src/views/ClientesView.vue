@@ -4,7 +4,7 @@
       <h4><i class="bi bi-people-fill me-2" style="color: var(--primary-light);"></i>Clientes</h4>
       <button class="btn btn-primary-custom" @click="openModal()"><i class="bi bi-plus-lg me-1"></i> Nuevo</button>
     </div>
-    <div class="search-box mb-3" style="max-width: 350px;"><i class="bi bi-search"></i><input type="text" class="form-control" placeholder="Buscar cliente..." v-model="search" /></div>
+    <div class="search-box mb-3" style="max-width: 350px;"><i class="bi bi-search"></i><input type="text" class="form-control" placeholder="Buscar por nombre, apellido o CI/NIT..." v-model="search" /></div>
     <div class="table-dark-custom">
       <table class="table table-hover mb-0">
         <thead><tr><th>#</th><th>Nombre</th><th>Apellido</th><th>CI/NIT</th><th>Teléfono</th><th>Acciones</th></tr></thead>
@@ -38,7 +38,7 @@ import http from '@/plugins/axios'
 import Swal from 'sweetalert2'
 import { Modal } from 'bootstrap'
 const items = ref<any[]>([]); const search = ref(''); const form = ref({ nombre: '', apellido: '', ciNit: '', telefono: '', correo: '', direccion: '' }); const editing = ref<number|null>(null); const modalRef = ref<HTMLElement>(); let bsModal: Modal
-const filtered = computed(() => items.value.filter(i => `${i.nombre} ${i.apellido}`.toLowerCase().includes(search.value.toLowerCase())))
+const filtered = computed(() => items.value.filter(i => `${i.nombre} ${i.apellido} ${i.ciNit || ''}`.toLowerCase().includes(search.value.toLowerCase())))
 onMounted(async () => { bsModal = new Modal(modalRef.value!); await load() })
 async function load() { items.value = (await http.get('clientes')).data }
 function openModal(item?: any) { if (item) { editing.value = item.id; form.value = { nombre: item.nombre, apellido: item.apellido, ciNit: item.ciNit||'', telefono: item.telefono||'', correo: item.correo||'', direccion: item.direccion||'' } } else { editing.value = null; form.value = { nombre: '', apellido: '', ciNit: '', telefono: '', correo: '', direccion: '' } } bsModal.show() }

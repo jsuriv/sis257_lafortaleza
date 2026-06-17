@@ -422,7 +422,8 @@ const filteredVentas = computed(() => {
   return ventas.value.filter(v => 
     String(v.id).includes(query) ||
     (v.cliente?.nombre && v.cliente.nombre.toLowerCase().includes(query)) ||
-    (v.cliente?.apellido && v.cliente.apellido.toLowerCase().includes(query))
+    (v.cliente?.apellido && v.cliente.apellido.toLowerCase().includes(query)) ||
+    (v.cliente?.ciNit && v.cliente.ciNit.toLowerCase().includes(query))
   )
 })
 
