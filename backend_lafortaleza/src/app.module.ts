@@ -56,6 +56,9 @@ import { CajasModule } from './cajas/cajas.module';
       ],
       synchronize: true, // Solo para desarrollo
       logging: false,
+      ssl: process.env.DB_SSL === 'true' || process.env.NODE_ENV === 'production'
+        ? { rejectUnauthorized: false }
+        : false,
     }),
     // Módulos del sistema
     RolesModule,

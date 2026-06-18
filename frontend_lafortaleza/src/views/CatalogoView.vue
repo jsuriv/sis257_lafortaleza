@@ -7,41 +7,41 @@
           <i class="bi bi-shield-fill text-gold animate-glow"></i>
           <span class="brand-text">LA FORTALEZA</span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler" type="button" @click="isNavbarOpen = !isNavbarOpen" :aria-expanded="isNavbarOpen" :class="{ collapsed: !isNavbarOpen }">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="collapse navbar-collapse" :class="{ show: isNavbarOpen }" id="navbarNav">
           <ul class="navbar-nav ms-auto align-items-center gap-3">
             <li class="nav-item">
-              <a class="nav-link" href="#inicio">Inicio</a>
+              <a class="nav-link" href="#inicio" @click="isNavbarOpen = false">Inicio</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#destacados">Destacados</a>
+              <a class="nav-link" href="#destacados" @click="isNavbarOpen = false">Destacados</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#categorias">Categorías</a>
+              <a class="nav-link" href="#categorias" @click="isNavbarOpen = false">Categorías</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#tienda">Catálogo</a>
+              <a class="nav-link" href="#tienda" @click="isNavbarOpen = false">Catálogo</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#elegirnos">Nosotros</a>
+              <a class="nav-link" href="#elegirnos" @click="isNavbarOpen = false">Nosotros</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#testimonios">Testimonios</a>
+              <a class="nav-link" href="#testimonios" @click="isNavbarOpen = false">Testimonios</a>
             </li>
 
             <!-- Client specific actions -->
             <template v-if="authStore.isLoggedIn && authStore.user?.rol?.nombre === 'CLIENTE'">
               <li class="nav-item position-relative">
-                <button class="btn btn-outline-gold position-relative d-flex align-items-center gap-2" @click="openCart">
+                <button class="btn btn-outline-gold position-relative d-flex align-items-center gap-2" @click="openCart(); isNavbarOpen = false">
                   <i class="bi bi-cart3"></i>
                   <span>Carrito</span>
                   <span class="badge bg-gold text-dark rounded-pill" v-if="cart.length > 0">{{ cartCount }}</span>
                 </button>
               </li>
               <li class="nav-item">
-                <button class="btn btn-outline-secondary d-flex align-items-center gap-2 text-white border-secondary" @click="openHistory">
+                <button class="btn btn-outline-secondary d-flex align-items-center gap-2 text-white border-secondary" @click="openHistory(); isNavbarOpen = false">
                   <i class="bi bi-clock-history"></i>
                   <span>Mis Pedidos</span>
                 </button>
@@ -52,7 +52,7 @@
                 </span>
               </li>
               <li class="nav-item">
-                <button class="btn btn-sm btn-outline-danger" @click="handleLogout">
+                <button class="btn btn-sm btn-outline-danger" @click="handleLogout(); isNavbarOpen = false">
                   <i class="bi-box-arrow-right"></i> Salir
                 </button>
               </li>
@@ -61,13 +61,13 @@
             <!-- Admin / Vendedor redirect link -->
             <template v-else-if="authStore.isLoggedIn">
               <li class="nav-item">
-                <router-link to="/admin" class="btn btn-outline-gold d-flex align-items-center gap-2">
+                <router-link to="/admin" class="btn btn-outline-gold d-flex align-items-center gap-2" @click="isNavbarOpen = false">
                   <i class="bi bi-speedometer2"></i>
                   <span>Ir al Panel</span>
                 </router-link>
               </li>
               <li class="nav-item">
-                <button class="btn btn-sm btn-outline-danger" @click="handleLogout">
+                <button class="btn btn-sm btn-outline-danger" @click="handleLogout(); isNavbarOpen = false">
                   <i class="bi-box-arrow-right"></i> Salir
                 </button>
               </li>
@@ -76,7 +76,7 @@
             <!-- Guest Login link -->
             <template v-else>
               <li class="nav-item ms-lg-2">
-                <router-link to="/login" class="btn btn-outline-gold d-flex align-items-center gap-2">
+                <router-link to="/login" class="btn btn-outline-gold d-flex align-items-center gap-2" @click="isNavbarOpen = false">
                   <i class="bi bi-person-circle"></i>
                   <span>Acceso Personal</span>
                 </router-link>
@@ -830,6 +830,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const isNavbarOpen = ref(false)
 
 const heroVideoUrl = ref('/video/hero.mp4')
 const heroVideoRef = ref<HTMLVideoElement | null>(null)

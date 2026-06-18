@@ -266,7 +266,7 @@ export class ProductosController {
     const isVideo = file.mimetype.startsWith('video/');
     const folder = isVideo ? 'videos' : 'uploads';
     return {
-      url: `http://localhost:5173/${folder}/${file.filename}`
+      url: `/${folder}/${file.filename}`
     };
   }
 
