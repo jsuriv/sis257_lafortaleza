@@ -38,14 +38,4 @@ dist-ssr/
 .DS_Store
 Thumbs.db
 
-# Local uploads and custom media configuration
-public/uploads/*
-!public/uploads/.gitkeep
-public/uploads/comprobantes/*
-!public/uploads/comprobantes/.gitkeep
-public/qr/qr-*
-public/qr/config.json
-public/videos/hero-*
-public/videos/config.json
-public/video/hero-*
-public/video/config.json
+

@@ -43,7 +43,5 @@ lerna-debug.log*
 .env.local
 *.copy
 
-# Local uploads
-/uploads/*
-!/uploads/.gitkeep
+
 
