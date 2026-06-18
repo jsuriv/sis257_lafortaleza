@@ -1,0 +1,47 @@
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Compiled outputs
+dist/
+**/dist/
+build/
+**/build/
+
+# Environment files
+.env
+.env.*
+!.env.example
+*.copy
+**/.env
+**/.env.*
+**/*.copy
+
+# IDE / Editors
+.vscode/
+.idea/
+*.suo
+*.ntvsca*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backend local uploads
+backend_lafortaleza/uploads/*
+!backend_lafortaleza/uploads/.gitkeep
+
+# Frontend local uploads and media configs
+frontend_lafortaleza/public/uploads/*
+!frontend_lafortaleza/public/uploads/.gitkeep
+frontend_lafortaleza/public/uploads/comprobantes/*
+!frontend_lafortaleza/public/uploads/comprobantes/.gitkeep
+frontend_lafortaleza/public/qr/qr-*
+frontend_lafortaleza/public/qr/config.json
+frontend_lafortaleza/public/videos/hero-*
+frontend_lafortaleza/public/videos/config.json
+frontend_lafortaleza/public/video/hero-*
+frontend_lafortaleza/public/video/config.json
