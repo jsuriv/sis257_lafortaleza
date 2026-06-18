@@ -173,8 +173,8 @@
               <tr v-for="p in searchedProducts" :key="p.id">
                 <td>
                   <div class="thumb-wrapper">
-                    <video v-if="isVideo(p.imagen)" :src="p.imagen" muted class="thumb-img" />
-                    <img v-else :src="p.imagen || 'https://images.unsplash.com/photo-1527061011665-3652c757a4d4?w=100'" class="thumb-img" />
+                    <video v-if="isVideo(p.imagen)" :src="getImageUrl(p.imagen)" muted class="thumb-img" />
+                    <img v-else :src="getImageUrl(p.imagen) || 'https://images.unsplash.com/photo-1527061011665-3652c757a4d4?w=100'" class="thumb-img" />
                   </div>
                 </td>
                 <td><code>{{ p.codigo }}</code></td>
@@ -253,6 +253,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import http from '@/plugins/axios'
+import { getImageUrl } from '@/helpers'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()

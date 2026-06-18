@@ -14,8 +14,8 @@
             <td>
               <div class="product-thumb-container">
                 <template v-if="p.imagen">
-                  <video v-if="isVideoUrl(p.imagen)" :src="p.imagen" muted class="product-thumb" />
-                  <img v-else :src="p.imagen" :alt="p.nombre" class="product-thumb" />
+                  <video v-if="isVideoUrl(p.imagen)" :src="getImageUrl(p.imagen)" muted class="product-thumb" />
+                  <img v-else :src="getImageUrl(p.imagen)" :alt="p.nombre" class="product-thumb" />
                 </template>
                 <span v-else class="product-thumb-fallback"><i class="bi bi-box-seam text-secondary"></i></span>
               </div>
@@ -129,8 +129,8 @@
           
           <!-- Vista previa de la imagen/video -->
           <div v-if="form.imagen" class="mt-3 position-relative d-inline-block" style="max-width: 180px;">
-            <video v-if="isVideoUrl(form.imagen)" :src="form.imagen" controls class="preview-asset" />
-            <img v-else :src="form.imagen" class="preview-asset" />
+            <video v-if="isVideoUrl(form.imagen)" :src="getImageUrl(form.imagen)" controls class="preview-asset" />
+            <img v-else :src="getImageUrl(form.imagen)" class="preview-asset" />
             <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; line-height: 1; z-index: 5;" @click="form.imagen = ''">
               <i class="bi bi-x" style="font-size: 1rem; color: #fff;"></i>
             </button>
@@ -146,6 +146,7 @@
 import { ref, computed, onMounted } from 'vue'
 import http from '@/plugins/axios'
 import Swal from 'sweetalert2'
+import { getImageUrl } from '@/helpers'
 import { Modal } from 'bootstrap'
 import { useAuthStore } from '@/stores/auth'
 

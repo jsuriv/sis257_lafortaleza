@@ -16,7 +16,7 @@
             <td>{{ i + 1 }}</td>
             <td>
               <div class="category-thumb-container" style="width: 45px; height: 45px; border-radius: 8px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05);">
-                <img v-if="item.imagen" :src="item.imagen" :alt="item.nombre" style="width: 100%; height: 100%; object-fit: cover;" />
+                <img v-if="item.imagen" :src="getImageUrl(item.imagen)" :alt="item.nombre" style="width: 100%; height: 100%; object-fit: cover;" />
                 <i v-else class="bi bi-tags text-secondary" style="font-size: 1.2rem;"></i>
               </div>
             </td>
@@ -53,7 +53,7 @@
             
             <!-- Preview -->
             <div v-if="form.imagen" class="mt-3 position-relative d-inline-block" style="max-width: 150px;">
-              <img :src="form.imagen" class="preview-asset rounded border border-secondary" style="width: 100%; object-fit: cover; height: 100px;" />
+              <img :src="getImageUrl(form.imagen)" class="preview-asset rounded border border-secondary" style="width: 100%; object-fit: cover; height: 100px;" />
               <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; line-height: 1; z-index: 5;" @click="form.imagen = ''">
                 <i class="bi bi-x" style="font-size: 1rem; color: #fff;"></i>
               </button>
@@ -73,6 +73,7 @@
 import { ref, computed, onMounted } from 'vue'
 import http from '@/plugins/axios'
 import Swal from 'sweetalert2'
+import { getImageUrl } from '@/helpers'
 import { Modal } from 'bootstrap'
 
 const items = ref<any[]>([])

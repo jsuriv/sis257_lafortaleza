@@ -138,8 +138,8 @@
             <div class="product-premium-card" @click="openDetails(p)">
               <div class="card-image-wrapper">
                 <template v-if="p.imagen">
-                  <video v-if="isVideoUrl(p.imagen)" :src="p.imagen" muted autoplay loop playsinline class="card-img-premium"></video>
-                  <img v-else :src="p.imagen" :alt="p.nombre" class="card-img-premium" />
+                  <video v-if="isVideoUrl(p.imagen)" :src="getImageUrl(p.imagen)" muted autoplay loop playsinline class="card-img-premium"></video>
+                  <img v-else :src="getImageUrl(p.imagen)" :alt="p.nombre" class="card-img-premium" />
                 </template>
                 <div v-else class="card-img-fallback">
                   <i :class="getCategoryIcon(p.categoria?.nombre)" class="fallback-icon"></i>
@@ -183,7 +183,7 @@
           <div class="col-6 col-md-4 col-lg-3" v-for="cat in categorias" :key="cat.id">
             <div class="category-premium-card" @click="selectDbCategory(cat.id)">
               <div class="category-image-wrapper">
-                <img :src="cat.imagen || 'https://images.unsplash.com/photo-1527061011665-3652c757a4d4?w=400'" :alt="cat.nombre" class="category-img" />
+                <img :src="getImageUrl(cat.imagen) || 'https://images.unsplash.com/photo-1527061011665-3652c757a4d4?w=400'" :alt="cat.nombre" class="category-img" />
                 <div class="category-overlay">
                   <h4 class="category-name text-white">{{ cat.nombre }}</h4>
                   <span class="category-btn btn btn-gold-sm">Ver Licores</span>
@@ -313,8 +313,8 @@
             <div class="product-premium-card" @click="openDetails(p)">
               <div class="card-image-wrapper">
                 <template v-if="p.imagen">
-                  <video v-if="isVideoUrl(p.imagen)" :src="p.imagen" muted autoplay loop playsinline class="card-img-premium"></video>
-                  <img v-else :src="p.imagen" :alt="p.nombre" class="card-img-premium" />
+                  <video v-if="isVideoUrl(p.imagen)" :src="getImageUrl(p.imagen)" muted autoplay loop playsinline class="card-img-premium"></video>
+                  <img v-else :src="getImageUrl(p.imagen)" :alt="p.nombre" class="card-img-premium" />
                 </template>
                 <div v-else class="card-img-fallback">
                   <i :class="getCategoryIcon(p.categoria?.nombre)" class="fallback-icon"></i>
@@ -471,8 +471,8 @@
           </div>
           <div class="modal-body text-center py-4">
             <div class="modal-image-holder mb-3" v-if="selectedProduct.imagen">
-              <video v-if="isVideoUrl(selectedProduct.imagen)" :src="selectedProduct.imagen" controls autoplay muted class="modal-prod-image"></video>
-              <img v-else :src="selectedProduct.imagen" :alt="selectedProduct.nombre" class="modal-prod-image" />
+              <video v-if="isVideoUrl(selectedProduct.imagen)" :src="getImageUrl(selectedProduct.imagen)" controls autoplay muted class="modal-prod-image"></video>
+              <img v-else :src="getImageUrl(selectedProduct.imagen)" :alt="selectedProduct.nombre" class="modal-prod-image" />
             </div>
             <div v-else class="modal-icon-holder mb-3">
               <i :class="getCategoryIcon(selectedProduct.categoria?.nombre)" style="font-size: 4rem; color: var(--gold);"></i>
@@ -823,6 +823,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import http from '@/plugins/axios'
+import { getImageUrl } from '@/helpers'
 import { Modal } from 'bootstrap'
 import Swal from 'sweetalert2'
 import { useAuthStore } from '@/stores/auth'
