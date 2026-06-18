@@ -15,11 +15,16 @@ async function bootstrap() {
   app.enableCors();
 
   // Servir archivos estáticos para subida de imágenes de productos
-  const uploadsDir = join(process.cwd(), 'uploads');
-  if (!existsSync(uploadsDir)) {
-    mkdirSync(uploadsDir);
+  // Se usa __dirname para localizar correctamente la carpeta uploads
+  // tanto en local (dist/src → ../../uploads) como en Render
+  const uploadsDir = join(__dirname, '..', '..', 'uploads');
+  const uploadsDirFallback = join(process.cwd(), 'uploads');
+  const finalUploadsDir = existsSync(uploadsDir) ? uploadsDir : uploadsDirFallback;
+  if (!existsSync(finalUploadsDir)) {
+    mkdirSync(finalUploadsDir, { recursive: true });
   }
-  app.use('/uploads', express.static(uploadsDir));
+  console.log(`Serving uploads from: ${finalUploadsDir}`);
+  app.use('/uploads', express.static(finalUploadsDir));
 
   // Configuración de Swagger
   const config = new DocumentBuilder()
